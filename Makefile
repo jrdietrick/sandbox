@@ -1,6 +1,8 @@
+LOAD_LOCATION = 0x00400000
+
 CFLAGS   += -m32 -Wall -fno-builtin -fno-stack-protector -nostdlib -g
-ASFLAGS  += -f elf -g -F dwarf
-LDFLAGS  += -m32 -nostdlib -static -Ttext=0x400000
+ASFLAGS  += -f elf -g -F dwarf -DLOAD_LOCATION=$(LOAD_LOCATION)
+LDFLAGS  += -m32 -nostdlib -static -Ttext=$(LOAD_LOCATION)
 CPPFLAGS += -m32 -nostdinc -g
 
 CC = gcc
