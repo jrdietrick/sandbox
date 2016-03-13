@@ -12,10 +12,6 @@ global start, _start
 
 use32
 
-start:
-_start:
-    jmp multiboot_entry
-
 align 32, db 0
 
 multiboot_header:
@@ -30,7 +26,8 @@ multiboot_header:
 
 align 16, db 0
 
-multiboot_entry:
+start:
+_start:
     cli
     mov dword [gdt_desc + 2], gdt
     lgdt [gdt_desc]
