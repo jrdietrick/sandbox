@@ -12,15 +12,10 @@ use32
 
 align 32, db 0
 
-multiboot_header:
-    dd MULTIBOOT_HEADER_MAGIC
-    dd MULTIBOOT_HEADER_FLAGS
-    dd -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
-    ; dd multiboot_header
-    ; dd entry
-    ; dd 0x0000
-    ; dd 0x0000
-    ; dd entry
+; The multiboot header
+dd MULTIBOOT_HEADER_MAGIC
+dd MULTIBOOT_HEADER_FLAGS
+dd -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
 
 align 16, db 0
 
