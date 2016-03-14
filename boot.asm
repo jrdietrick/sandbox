@@ -24,9 +24,9 @@ _start:
     cli
     mov dword [gdt_desc + 2], gdt
     lgdt [gdt_desc]
-    jmp KERNEL_CODE_SEGMENT:keep_going
+    jmp KERNEL_CODE_SEGMENT:continue
 
-keep_going:
+continue:
     ; Set stack to a known location
     mov esp, LOAD_LOCATION
     mov cx, KERNEL_DATA_SEGMENT
@@ -57,6 +57,6 @@ align 16, db 0
 
 gdt_desc:
     dw gdt_end - gdt - 1
-    dq 0 ; will be filled in at start
+    dd 0 ; will be filled in at start
 
-align 32, db 0
+align 16, db 0
