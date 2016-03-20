@@ -1,4 +1,4 @@
-LOAD_LOCATION = 0x00400000
+LOAD_LOCATION = 0x02000000
 
 CFLAGS   += -m32 -Wall -fno-builtin -fno-stack-protector -nostdlib -g
 ASFLAGS  += -f elf -g -F dwarf -DLOAD_LOCATION=$(LOAD_LOCATION)
