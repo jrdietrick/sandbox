@@ -17,7 +17,7 @@ OBJS += $(patsubst %.c,%.o,$(filter %.c,$(SRC)))
 kernel: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
-boot.o: boot.asm
+boot.o: boot.asm exceptions.asm
 	$(AS) $(ASFLAGS) -o $@ $<
 
 clean:
