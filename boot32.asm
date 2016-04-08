@@ -1,6 +1,3 @@
-%define MULTIBOOT_HEADER_MAGIC 0x1BADB002
-%define MULTIBOOT_HEADER_FLAGS 0x00000003
-
 %define KERNEL_TSS          0x0008
 %define KERNEL_CODE_SEGMENT 0x0010
 %define KERNEL_DATA_SEGMENT 0x0018
@@ -9,16 +6,11 @@
 
 global start, _start
 
-use32
-
-align 32, db 0
-
-; The multiboot header
-dd MULTIBOOT_HEADER_MAGIC
-dd MULTIBOOT_HEADER_FLAGS
-dd -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
-
-align 16, db 0
+; We lied a little with the name of this file -- at this point we are
+; still in 16-bit real mode. But we had to get out of that
+; claustrophobic MBR sector. Just need to set up segmentation and then
+; we can be on our way...
+use16
 
 start:
 _start:
@@ -39,9 +31,17 @@ _start:
     mov dword [gdt_desc + 2], gdt
     mov dword [idt_desc + 2], idt
 
+    ; Turn on protected mode
+    mov eax, cr0
+    or eax, 0x01
+    mov cr0, eax
+
     ; Switch to our own segments (load the GDT)
     lgdt [gdt_desc]
     jmp KERNEL_CODE_SEGMENT:continue
+
+; Now we're really in 32-bit protected mode
+use32
 
 continue:
     ; Set stack to a known location
