@@ -17,8 +17,9 @@ OBJS += $(patsubst %.c,%.o,$(filter %.c,$(SRC)))
 kernel: $(OBJS) boot16.o
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 	cat boot16.o > disk_image
+	dd if=/dev/zero bs=512 count=16 >> disk_image
 	objcopy -O binary --only-section=.text kernel kernel.text
-	dd if=kernel.text bs=512 >> disk_image
+	dd if=kernel.text of=disk_image bs=512 seek=1 conv=notrunc
 	rm kernel.text
 # TODO: We're just relying on the fact that when we make an ELF of
 # kernel it seems like our .text always starts at 0x1000. That is

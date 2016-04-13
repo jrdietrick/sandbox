@@ -2,7 +2,56 @@ use16
 
 org 0x7c00
 
-jmp init
+init:
+    cli
+    xor eax, eax
+    mov ss, ax
+    mov es, ax
+    mov ds, ax
+    mov sp, 0x7c00
+    sti
+
+    call clear_screen
+
+    mov bp, sp
+
+    ; https://en.wikipedia.org/wiki/INT_13H#INT_13h_AH.3D42h:_Extended_Read_Sectors_From_Drive
+    ; Read from sector 0x0000000000000001
+    push dword 0x00000000
+    push dword 0x00000001
+    ; Load into memory at 0x0000:0x8000
+    push word 0x0000
+    push word 0x8000
+    ; Read 16 sectors (8KB)
+    push word 16
+    ; This struct is 16 bytes
+    push word 16
+
+    ; DL should contain the drive index already -- be careful not to stomp before this!
+    ; Should we just be stashing it somewhere?
+    mov si, sp
+    mov ah, 0x42
+    int 0x13
+
+    ; If the carry flag is set, something went wrong.
+    jc read_sectors_error
+
+    ; Fix the stack
+    mov sp, bp
+
+    ; Jump to boot32.asm
+    jmp 0x0000:0x8000
+
+read_sectors_error:
+    mov esi, string_read_sectors_error
+    call display_message
+    jmp halt
+
+clear_screen:
+    mov ah, 0x00
+    mov al, 0x03
+    int 0x10
+    ret
 
 display_message:
     push eax
@@ -21,50 +70,11 @@ display_message_done:
     pop eax
     ret
 
-init:
-    cli
-    xor eax, eax
-    mov ss, ax
-    mov es, ax
-    mov ds, ax
-    mov sp, 0x7c00
-    sti
-    cld
-
-    call clear_screen
-
-    mov bp, sp
-
-    ; https://en.wikipedia.org/wiki/INT_13H#INT_13h_AH.3D42h:_Extended_Read_Sectors_From_Drive
-    push dword 0x00000000
-    push dword 0x00000001
-    push ds
-    push word 0x8000
-    push word 16
-    push word 16
-
-    ; DL should contain the drive index already -- be careful not to stomp before this!
-    ; Should we just be stashing it somewhere?
-    mov si, sp
-    mov ah, 0x42
-    int 0x13
-
-    ; TODO: error checking anyone?
-
-    ; Fix the stack
-    mov sp, bp
-
-    ; Jump to boot32.asm
-    jmp 0x0000:0x8000
-
-clear_screen:
-    mov ah, 0x00
-    mov al, 0x03
-    int 0x10
-    ret
-
 halt:
+    hlt
     jmp halt
+
+string_read_sectors_error: db 'FATAL: Could not read sectors from drive!', 0
 
 times 446-($-$$) db 0
 
