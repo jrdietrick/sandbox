@@ -1,8 +1,12 @@
 %define KERNEL_TSS          0x0008
 %define KERNEL_CODE_SEGMENT 0x0010
 %define KERNEL_DATA_SEGMENT 0x0018
+%define USER_CODE_SEGMENT   0x0023
+%define USER_DATA_SEGMENT   0x002b
 
 %define VGA_START 0x000b8000
+%define USER_LOAD_LOCATION 0x02000000
+%define USER_STACK_LOCATION 0x02100000
 
 global _start
 
@@ -95,10 +99,36 @@ disable_cursor:
     mov esi, string_ok
     call print_string
 
+    xor ecx, ecx
+    call load_program
+
 halt:
     cli
     hlt
     jmp halt
+
+load_program:
+    ; Calculate the starting address of
+    ; the program we're loading on our
+    ; "filesystem"
+    mov esi, 0xc000
+    imul ecx, 8
+    add esi, ecx
+    mov edi, USER_LOAD_LOCATION ; load program at 32MB
+    mov ecx, 0x80 ; move 128 dwords (one sector)
+    rep movsd
+    pushad
+
+    cli
+    push dword USER_DATA_SEGMENT
+    push dword USER_STACK_LOCATION
+    pushfd
+    or dword [esp], 0x200
+    push dword USER_CODE_SEGMENT
+    push dword USER_LOAD_LOCATION
+    mov ax, USER_DATA_SEGMENT
+    mov ds, ax
+    iret
 
 clear_screen:
     mov ecx, 0
@@ -160,8 +190,12 @@ gdt:
     dq 0
 .tss_entry:
     dq 0x0000890000000000 ; TSS entry, will be filled in further at start
-    dq 0x00CF9A000000FFFF ; kernel stack segment
+    dq 0x00CF9A000000FFFF ; kernel code segment
     dq 0x00CF92000000FFFF ; kernel data segment
+    dq 0x02cffa000000cfff ; user code segment (32MB-end)
+    dq 0x02cff2000000cfff ; user data segment (32MB-end)
+    dq 0x00CFFA000000FFFF ; (full-flat) user code segment
+    dq 0x00CFF2000000FFFF ; (full-flat) user data segment
 .end:
 
 align 16, db 0

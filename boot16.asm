@@ -38,6 +38,23 @@ org 0x7c00
     ; Fix the stack
     mov sp, bp
 
+    ; Read up to 16 512-byte programs
+    ; from the "filesystem" in to 0xc000
+    push dword 0x00000000
+    push dword 0x00000011
+    push word 0x0000
+    push word 0xc000
+    push word 16
+    push word 16
+    mov si, sp
+    mov ah, 0x42
+    int 0x13
+
+    ; We don't care about errors for this
+    ; one, it's a best-effort attempt
+
+    mov sp, bp
+
     ; Jump to boot32.asm
     jmp 0x0000:LOAD_LOCATION
 
