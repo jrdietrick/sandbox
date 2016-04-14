@@ -39,7 +39,7 @@ org 0x7c00
     mov sp, bp
 
     ; Jump to boot32.asm
-    jmp 0x0000:0x8000
+    jmp 0x0000:LOAD_LOCATION
 
 read_sectors_error:
     mov esi, string_read_sectors_error
