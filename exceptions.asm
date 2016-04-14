@@ -18,6 +18,10 @@ exception_handler_13_general_protection_fault:
     call print_string
     jmp exception_spin
 
+system_call_handler:
+    pushad
+    jmp exception_spin
+
 exception_spin:
     cli
     hlt
@@ -73,3 +77,9 @@ exception_jump_table:
     dd exception_handler
     dd exception_handler
     dd exception_handler
+
+    ; 32-127
+    times 96 dd 0
+
+    ; 128
+    dd system_call_handler

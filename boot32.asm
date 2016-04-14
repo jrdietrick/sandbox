@@ -64,13 +64,21 @@ setup_idt:
     mov ecx, 0
 
 .loop:
+    push dword 0x8f00 ; ring 0
     push ecx
     call fill_idt
     pop ecx
+    add esp, 4
 
     inc ecx
     cmp ecx, 32
     jl .loop
+
+    ; System call gate
+    push dword 0xef00 ; ring 3
+    push dword 128
+    call fill_idt
+    add esp, 8
 
     ; Load our interrupt vectors
     lidt [idt_desc]
@@ -158,10 +166,17 @@ fill_idt:
     push ebp
     mov ebp, esp
     push ebx
-    mov eax, [ebp + 8]
+
+    ; Get the ring level from the stack
+    mov edx, [ebp + 12]
+    ; xor dx, dx
+    ; mov dl, al
+    ; shl dx, 13
+    ; or dx, 0x8f00
 
     ; Calculate the address of our IDT descriptor
     mov ebx, idt
+    mov eax, [ebp + 8]
     mov ecx, eax
     imul ecx, 8
     add ebx, ecx
@@ -177,7 +192,7 @@ fill_idt:
     mov [ebx], ax
     shr eax, 16
     mov [ebx + 6], ax
-    mov word [ebx + 4], 0x8F00
+    mov word [ebx + 4], dx
 
 .skip:
     pop ebx
@@ -190,12 +205,10 @@ gdt:
     dq 0
 .tss_entry:
     dq 0x0000890000000000 ; TSS entry, will be filled in further at start
-    dq 0x00CF9A000000FFFF ; kernel code segment
-    dq 0x00CF92000000FFFF ; kernel data segment
-    dq 0x02cffa000000cfff ; user code segment (32MB-end)
-    dq 0x02cff2000000cfff ; user data segment (32MB-end)
-    dq 0x00CFFA000000FFFF ; (full-flat) user code segment
-    dq 0x00CFF2000000FFFF ; (full-flat) user data segment
+    dq 0x00cf9a000000ffff ; kernel code segment
+    dq 0x00cf92000000ffff ; kernel data segment
+    dq 0x00cffa000000ffff ; user code segment
+    dq 0x00cff2000000ffff ; user data segment
 .end:
 
 align 16, db 0
@@ -213,7 +226,7 @@ tss:
 align 16, db 0
 
 idt:
-    times 32 dq 0
+    times 256 dq 0
 .end:
 
 align 16, db 0

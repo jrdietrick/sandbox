@@ -1,3 +1,5 @@
 *.o
+*.o.text
 disk_image
 kernel
+program0
