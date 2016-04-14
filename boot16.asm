@@ -2,7 +2,6 @@ use16
 
 org 0x7c00
 
-init:
     cli
     xor eax, eax
     mov ss, ax
@@ -56,17 +55,17 @@ clear_screen:
 display_message:
     push eax
 
-display_message_loop:
+.loop:
     lodsb
     cmp al, 0
-    je display_message_done
+    je .done
     push si
     mov ah, 0x0e
     int 0x10
     pop si
-    jmp display_message_loop
+    jmp .loop
 
-display_message_done:
+.done:
     pop eax
     ret
 

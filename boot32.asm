@@ -4,7 +4,7 @@
 
 %define VGA_START 0x000b8000
 
-global start, _start
+global _start
 
 ; We lied a little with the name of this file -- at this point we are
 ; still in 16-bit real mode. But we had to get out of that
@@ -17,14 +17,14 @@ _start:
     cli
 
     ; Set up the TSS entry in the GDT
-    mov ecx, tss_end - tss - 1
-    mov word [tss_entry], cx
+    mov ecx, tss.end - tss - 1
+    mov word [gdt.tss_entry], cx
     mov ecx, tss
-    mov word [tss_entry + 2], cx
+    mov word [gdt.tss_entry + 2], cx
     shr ecx, 16
-    mov byte [tss_entry + 4], cl
+    mov byte [gdt.tss_entry + 4], cl
     shr ecx, 8
-    mov byte [tss_entry + 7], cl
+    mov byte [gdt.tss_entry + 7], cl
 
     ; Populate linear addresses for some structures
     ; we can't compute at compile time
@@ -38,12 +38,12 @@ _start:
 
     ; Switch to our own segments (load the GDT)
     lgdt [gdt_desc]
-    jmp KERNEL_CODE_SEGMENT:continue
+    jmp KERNEL_CODE_SEGMENT:start32
 
 ; Now we're really in 32-bit protected mode
 use32
 
-continue:
+start32:
     ; Set stack to a known location
     mov esp, LOAD_LOCATION
     mov cx, KERNEL_DATA_SEGMENT
@@ -59,14 +59,14 @@ continue:
 setup_idt:
     mov ecx, 0
 
-fill_idt_loop:
+.loop:
     push ecx
     call fill_idt
     pop ecx
 
     inc ecx
     cmp ecx, 32
-    jl fill_idt_loop
+    jl .loop
 
     ; Load our interrupt vectors
     lidt [idt_desc]
@@ -102,26 +102,26 @@ halt:
 
 clear_screen:
     mov ecx, 0
-clear_screen_loop:
+.loop:
     mov word [VGA_START + ecx], 0x0720
     add ecx, 2
     cmp ecx, 80 * 25
-    jne clear_screen_loop
+    jne .loop
     ret
 
 print_string:
     mov ecx, VGA_START
     mov eax, 0x0700
 
-print_string_loop:
+.loop:
     lodsb
     cmp al, 0
-    je print_string_done
+    je .done
     mov word [ecx], ax
     add ecx, 2
-    jmp print_string_loop
+    jmp .loop
 
-print_string_done:
+.done:
     ret
 
 fill_idt:
@@ -141,7 +141,7 @@ fill_idt:
 
     ; Don't fill if there is no pointer
     cmp eax, 0
-    jz fill_idt_skip
+    jz .skip
 
     mov word [ebx + 2], KERNEL_CODE_SEGMENT
     mov [ebx], ax
@@ -149,7 +149,7 @@ fill_idt:
     mov [ebx + 6], ax
     mov word [ebx + 4], 0x8F00
 
-fill_idt_skip:
+.skip:
     pop ebx
     pop ebp
     ret
@@ -158,34 +158,34 @@ align 16, db 0
 
 gdt:
     dq 0
-tss_entry:
+.tss_entry:
     dq 0x0000890000000000 ; TSS entry, will be filled in further at start
     dq 0x00CF9A000000FFFF ; kernel stack segment
     dq 0x00CF92000000FFFF ; kernel data segment
-gdt_end:
+.end:
 
 align 16, db 0
 
 gdt_desc:
-    dw gdt_end - gdt - 1
+    dw gdt.end - gdt - 1
     dd 0 ; will be filled in at start
 
 align 16, db 0
 
 tss:
     times 104 db 0
-tss_end:
+.end:
 
 align 16, db 0
 
 idt:
     times 32 dq 0
-idt_end:
+.end:
 
 align 16, db 0
 
 idt_desc:
-    dw idt_end - idt - 1
+    dw idt.end - idt - 1
     dd 0 ; will be filled in at start
 
 align 16, db 0
