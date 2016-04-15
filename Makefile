@@ -8,14 +8,8 @@ CPPFLAGS += -m32 -nostdinc -g
 CC = gcc
 AS = nasm
 
-# This generates the list of source files
-SRC = $(wildcard *.c)
-
-OBJS  = boot32.o
-OBJS += $(patsubst %.c,%.o,$(filter %.c,$(SRC)))
-
-kernel: $(OBJS) boot16.o program0
-	$(CC) $(LDFLAGS) -Ttext=$(LOAD_LOCATION) $(OBJS) -o $@
+kernel: boot32.o boot16.o program0
+	$(CC) $(LDFLAGS) -Ttext=$(LOAD_LOCATION) boot32.o -o $@
 	cat boot16.o > disk_image
 	dd if=/dev/zero bs=512 count=16 >> disk_image
 	objcopy -O binary --only-section=.text kernel kernel.o.text
