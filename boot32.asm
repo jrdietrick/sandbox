@@ -67,7 +67,7 @@ setup_idt:
     mov ecx, 0
 
 .loop:
-    push dword 0x8f00 ; ring 0
+    push dword 0 ; ring 0
     push ecx
     call fill_idt
     pop ecx
@@ -78,7 +78,7 @@ setup_idt:
     jl .loop
 
     ; System call gate
-    push dword 0xef00 ; ring 3
+    push dword 3 ; ring 3
     push dword 128
     call fill_idt
     add esp, 8
@@ -172,10 +172,8 @@ fill_idt:
 
     ; Get the ring level from the stack
     mov edx, [ebp + 12]
-    ; xor dx, dx
-    ; mov dl, al
-    ; shl dx, 13
-    ; or dx, 0x8f00
+    shl dx, 13
+    or dx, 0x8f00
 
     ; Calculate the address of our IDT descriptor
     mov ebx, idt
