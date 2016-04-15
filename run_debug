@@ -1,2 +1,2 @@
 #!/bin/bash
-./run -s -S
+./run -s -S $*

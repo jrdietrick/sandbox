@@ -3,6 +3,7 @@
 %define KERNEL_DATA_SEGMENT 0x0018
 %define USER_CODE_SEGMENT   0x0023
 %define USER_DATA_SEGMENT   0x002b
+%define KERNEL_LDT          0x0030
 
 %define VGA_START 0x000b8000
 %define USER_LOAD_LOCATION 0x02000000
@@ -57,6 +58,22 @@ start32:
     mov fs, cx
     mov gs, cx
 
+    ; Set up the LDT
+    mov ecx, ldt.end - ldt - 1
+    mov word [gdt.ldt_entry], cx
+    mov ecx, ldt
+    mov word [gdt.ldt_entry + 2], cx
+    shr ecx, 16
+    mov byte [gdt.ldt_entry + 4], cl
+    shr ecx, 8
+    mov byte [gdt.ldt_entry + 7], cl
+    mov cx, KERNEL_LDT
+    lldt cx
+
+    ; Finish setting up the TSS
+    mov dword [tss + 4], LOAD_LOCATION ; LDT segment selector
+    mov dword [tss + 8], KERNEL_DATA_SEGMENT ; SS0
+    mov dword [tss + 96], KERNEL_LDT ; ESP0
     mov cx, KERNEL_TSS
     ltr cx
 
@@ -209,12 +226,20 @@ gdt:
     dq 0x00cf92000000ffff ; kernel data segment
     dq 0x00cffa000000ffff ; user code segment
     dq 0x00cff2000000ffff ; user data segment
+.ldt_entry:
+    dq 0x0080820000000000 ; LDT entry, will be filled in further at start
 .end:
 
 align 16, db 0
 
 gdt_desc:
     dw gdt.end - gdt - 1
+    dd 0 ; will be filled in at start
+
+align 16, db 0
+
+idt_desc:
+    dw idt.end - idt - 1
     dd 0 ; will be filled in at start
 
 align 16, db 0
@@ -231,15 +256,14 @@ idt:
 
 align 16, db 0
 
-idt_desc:
-    dw idt.end - idt - 1
-    dd 0 ; will be filled in at start
-
-align 16, db 0
+ldt:
+    times 4 dq 0
+.end:
 
 string_ok: db 'OK', 0
 string_exception: db 'EXCEPTION OCCURRED', 0
 string_double_fault: db 'DOUBLE FAULT', 0
 string_general_protection_fault: db 'GENERAL PROTECTION FAULT', 0
+string_system_call: db 'SYSTEM CALL', 0
 
 %include "exceptions.asm"

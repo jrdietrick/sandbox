@@ -19,7 +19,8 @@ exception_handler_13_general_protection_fault:
     jmp exception_spin
 
 system_call_handler:
-    pushad
+    mov esi, string_system_call
+    call print_string
     jmp exception_spin
 
 exception_spin:
