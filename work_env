@@ -1,0 +1,5 @@
+alias run_no_vnc="qemu-system-x86_64 -m 512 -drive file=disk_image,format=raw"
+alias run="run_no_vnc -monitor stdio -vnc :99"
+alias run_debug="run -s -S"
+alias debug="cgdb -- -x .gdbinit"
+alias view="vncviewer :99"
