@@ -20,16 +20,6 @@ start:
 _start:
     cli
 
-    ; Set up the TSS entry in the GDT
-    mov ecx, tss.end - tss - 1
-    mov word [gdt.tss_entry], cx
-    mov ecx, tss
-    mov word [gdt.tss_entry + 2], cx
-    shr ecx, 16
-    mov byte [gdt.tss_entry + 4], cl
-    shr ecx, 8
-    mov byte [gdt.tss_entry + 7], cl
-
     ; Populate linear addresses for some structures
     ; we can't compute at compile time
     mov dword [gdt_desc + 2], gdt
@@ -50,14 +40,25 @@ use32
 start32:
     ; Set stack to a known location
     mov esp, LOAD_LOCATION
-    mov cx, KERNEL_DATA_SEGMENT
+    mov ecx, KERNEL_DATA_SEGMENT
     mov ss, cx
     mov ds, cx
+    xor ecx, ecx
     mov es, cx
     mov fs, cx
     mov gs, cx
 
-    ; Finish setting up the TSS
+    ; Fill in the TSS entry in the GDT
+    mov ecx, tss.end - tss - 1
+    mov word [gdt.tss_entry], cx
+    mov ecx, tss
+    mov word [gdt.tss_entry + 2], cx
+    shr ecx, 16
+    mov byte [gdt.tss_entry + 4], cl
+    shr ecx, 8
+    mov byte [gdt.tss_entry + 7], cl
+
+    ; ... and some statics in the TSS itself
     mov dword [tss + 4], LOAD_LOCATION ; ESP0
     mov dword [tss + 8], KERNEL_DATA_SEGMENT ; SS0
     mov cx, KERNEL_TSS
@@ -134,7 +135,7 @@ load_program:
     push dword USER_DATA_SEGMENT
     push dword USER_STACK_LOCATION
     pushfd
-    or dword [esp], 0x200
+    or dword [esp], 0x200 ; re-enable interrupts when we reach usermode
     push dword USER_CODE_SEGMENT
     push dword USER_LOAD_LOCATION
     mov ax, USER_DATA_SEGMENT
@@ -202,7 +203,19 @@ fill_idt:
 
 align 16, db 0
 
-gdt:
+    dw 0 ; padding
+gdt_desc:
+    dw gdt.end - gdt - 1
+    dd 0 ; will be filled in at start
+
+    dw 0 ; padding
+idt_desc:
+    dw idt.end - idt - 1
+    dd 0 ; will be filled in at start
+
+align 8, db 0
+
+gdt: ; GDT should be 8-byte aligned
     dq 0
 .tss_entry:
     dq 0x0000890000000000 ; TSS entry, will be filled in further at start
@@ -212,32 +225,21 @@ gdt:
     dq 0x00cff2000000ffff ; user data segment
 .end:
 
-align 16, db 0
-
-gdt_desc:
-    dw gdt.end - gdt - 1
-    dd 0 ; will be filled in at start
-
-align 16, db 0
-
-idt_desc:
-    dw idt.end - idt - 1
-    dd 0 ; will be filled in at start
-
-align 16, db 0
+align 8, db 0
 
 tss:
     times 104 db 0
 .end:
 
-align 16, db 0
+align 8, db 0
 
 idt:
-    times 256 dq 0
+    times 129 dq 0
 .end:
 
-align 16, db 0
+%include "exceptions.asm"
 
+align 16, db 0
 
 string_ok: db 'OK', 0
 string_exception: db 'EXCEPTION OCCURRED', 0
@@ -245,4 +247,4 @@ string_double_fault: db 'DOUBLE FAULT', 0
 string_general_protection_fault: db 'GENERAL PROTECTION FAULT', 0
 string_system_call: db 'SYSTEM CALL', 0
 
-%include "exceptions.asm"
+align 16, db 0
