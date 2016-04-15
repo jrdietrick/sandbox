@@ -129,7 +129,6 @@ load_program:
     mov edi, USER_LOAD_LOCATION ; load program at 32MB
     mov ecx, 0x80 ; move 128 dwords (one sector)
     rep movsd
-    pushad
 
     cli
     push dword USER_DATA_SEGMENT
