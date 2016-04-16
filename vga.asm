@@ -21,7 +21,7 @@ clear_screen:
 .loop:
     mov word [VGA_START + ecx], 0x0720
     add ecx, 2
-    cmp ecx, 80 * 25
+    cmp ecx, 80 * 25 * 2
     jne .loop
     mov byte [cursor_x], 0
     mov byte [cursor_y], 0
@@ -33,9 +33,9 @@ putc:
 
     ; Calculate memory address
     xor ecx, ecx
-    mov cl, [cursor_y]
+    mov ecx, dword [cursor_y]
     imul ecx, 80
-    add cl, [cursor_x]
+    add ecx, dword [cursor_x]
     imul ecx, 2
 
     ; AL contains the byte to write
@@ -68,5 +68,5 @@ println:
     call putc
     ret
 
-cursor_x: db 0
-cursor_y: db 0
+cursor_x: dd 0
+cursor_y: dd 0
