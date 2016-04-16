@@ -23,19 +23,50 @@ clear_screen:
     add ecx, 2
     cmp ecx, 80 * 25
     jne .loop
+    mov byte [cursor_x], 0
+    mov byte [cursor_y], 0
     ret
 
-print_string:
-    mov ecx, VGA_START
-    mov eax, 0x0700
+putc:
+    cmp al, 0xa
+    je .newline
 
+    ; Calculate memory address
+    xor ecx, ecx
+    mov cl, [cursor_y]
+    imul ecx, 80
+    add cl, [cursor_x]
+    imul ecx, 2
+
+    ; AL contains the byte to write
+    mov ah, 0x07
+    mov word [VGA_START + ecx], ax
+
+    ; Increment
+    add byte [cursor_x], 1
+    cmp byte [cursor_x], 80
+    jne .done
+.newline:
+    mov byte [cursor_x], 0
+    add byte [cursor_y], 1
+    cmp byte [cursor_y], 25
+    jne .done
+    call clear_screen
+.done:
+    ret
+
+println:
 .loop:
     lodsb
     cmp al, 0
     je .done
-    mov word [ecx], ax
-    add ecx, 2
+    call putc
     jmp .loop
 
 .done:
+    mov al, 0xa
+    call putc
     ret
+
+cursor_x: db 0
+cursor_y: db 0

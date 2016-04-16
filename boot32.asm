@@ -93,7 +93,7 @@ setup_idt:
     call disable_cursor
     call clear_screen
     mov esi, string_ok
-    call print_string
+    call println
 
     xor ecx, ecx
     call load_program

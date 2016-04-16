@@ -3,24 +3,24 @@ align 16, db 0
 exception_handler:
     pushad
     mov esi, string_exception
-    call print_string
+    call println
     jmp exception_spin
 
 exception_handler_8_double_fault:
     pushad
     mov esi, string_double_fault
-    call print_string
+    call println
     jmp exception_spin
 
 exception_handler_13_general_protection_fault:
     pushad
     mov esi, string_general_protection_fault
-    call print_string
+    call println
     jmp exception_spin
 
 system_call_handler:
     mov esi, string_system_call
-    call print_string
+    call println
     jmp exception_spin
 
 exception_spin:
