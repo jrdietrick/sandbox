@@ -4,7 +4,6 @@ global _start
 
 start:
 _start:
-    mov dword [0x03000000], 4
     mov eax, 1
     xor ebx, ebx
     xor ecx, ecx
@@ -13,7 +12,13 @@ _start:
     push dword 0
     push dword 0
     push dword 0
+.loop
     int 0x80
+    inc ebx
+    cmp ebx, 26
+    jl .loop
+
+    int 0xd
 
 spin:
     jmp spin
