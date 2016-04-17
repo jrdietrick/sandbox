@@ -1,3 +1,8 @@
+%define FLAG(x) (1 << x)
+%define DISABLE_FLAG(x) (~x)
+
+%define CR0_PROTECTED_MODE FLAG(0)
+
 %define KERNEL_TSS          0x0008
 %define KERNEL_CODE_SEGMENT 0x0010
 %define KERNEL_DATA_SEGMENT 0x0018
@@ -27,7 +32,7 @@ _start:
 
     ; Turn on protected mode
     mov eax, cr0
-    or eax, 0x01
+    or eax, CR0_PROTECTED_MODE
     mov cr0, eax
 
     ; Switch to our own segments (load the GDT)

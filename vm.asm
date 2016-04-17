@@ -4,9 +4,6 @@ db 'vm.asm', 0
 
 align 16, db 0
 
-%define FLAG(x) (1 << x)
-%define DISABLE_FLAG(x) (~x)
-
 %define PAGE_DIRECTORY_LOCATION 0x00001000
 %define PAGE_DIRECTORY_LENGTH_DWORDS 1024
 %define PTE_PRESENT FLAG(0)
