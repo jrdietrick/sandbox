@@ -1,5 +1,9 @@
 align 16, db 0
 
+db 'exceptions.asm', 0
+
+align 16, db 0
+
 exception_handler:
     pushad
     mov esi, string_exception

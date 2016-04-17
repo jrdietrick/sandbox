@@ -1,3 +1,9 @@
+align 16, db 0
+
+db 'vga.asm', 0
+
+align 16, db 0
+
 disable_cursor:
     ; Disable the cursor
     xor eax, eax
