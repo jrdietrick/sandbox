@@ -22,6 +22,11 @@ exception_handler_13_general_protection_fault:
     call println
     jmp exception_spin
 
+exception_handler_14_page_fault:
+    mov esi, string_page_fault
+    call println
+    jmp exception_spin
+
 system_call_handler:
     mov esi, string_system_call
     call println
@@ -56,7 +61,7 @@ exception_jump_table:
     ; 12
     dd exception_handler
     dd exception_handler_13_general_protection_fault
-    dd exception_handler
+    dd exception_handler_14_page_fault
     dd exception_handler
 
     ; 16

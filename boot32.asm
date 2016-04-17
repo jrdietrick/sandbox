@@ -208,6 +208,7 @@ string_ok: db 'OK', 0
 string_exception: db 'EXCEPTION OCCURRED', 0
 string_double_fault: db 'DOUBLE FAULT', 0
 string_general_protection_fault: db 'GENERAL PROTECTION FAULT', 0
+string_page_fault: db 'PAGE FAULT', 0
 string_system_call: db 'SYSTEM CALL', 0
 
 align 16, db 0
