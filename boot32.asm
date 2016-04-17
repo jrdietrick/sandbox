@@ -89,6 +89,8 @@ setup_idt:
 
     sti
 
+    call basic_paging_setup
+
     ; Clear the screen and print "OK"
     call disable_cursor
     call clear_screen
@@ -198,6 +200,7 @@ idt:
 
 %include "vga.asm"
 %include "exceptions.asm"
+%include "vm.asm"
 
 align 16, db 0
 
