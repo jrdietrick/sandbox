@@ -21,7 +21,6 @@ basic_paging_setup:
     ; First zero out the page directory.
     ; TODO: is there a faster way to do
     ; this?
-    mov dword [PAGE_DIRECTORY_LOCATION + 0x100], 0x88888888
     push edi
     xor eax, eax
     mov ecx, PAGE_DIRECTORY_LENGTH_DWORDS
@@ -30,8 +29,8 @@ basic_paging_setup:
     rep stosd
 
     ; Simple memory map for now:
-    ; 0-4MB straight-through for kernel
-    ; 32-36MB straight-through for usermode
+    ; 0-4MB identity-paged for kernel
+    ; 32-36MB identity-paged for usermode
     mov dword [PAGE_DIRECTORY_LOCATION + (4 * 0)], 0x00000000 | PTE_PRESENT | PTE_4MB
     mov dword [PAGE_DIRECTORY_LOCATION + (4 * 8)], 0x02000000 | PTE_PRESENT | PTE_RW | PTE_USER_ACCESSIBLE | PTE_4MB
 
