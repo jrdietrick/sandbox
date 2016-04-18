@@ -12,7 +12,7 @@ _start:
     push dword 0
     push dword 0
     push dword 0
-.loop
+.loop:
     int 0x80
     inc ebx
     cmp ebx, 26
