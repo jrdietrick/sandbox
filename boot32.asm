@@ -102,8 +102,15 @@ setup_idt:
     mov esi, string_ok
     call println
 
-    xor ecx, ecx
-    call load_program
+    ; Print an empty line
+    push dword 0
+    mov esi, esp
+    call println
+    add esp, 4
+
+    call print_ascii_table
+    ; xor ecx, ecx
+    ; call load_program
 
 halt:
     cli

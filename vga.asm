@@ -74,5 +74,29 @@ println:
     call putc
     ret
 
+print_ascii_table:
+    push ebp
+    mov ebp, esp
+
+    ; EAX contains the current character, which runs
+    ; from 0 to 127, adding a newline every 16
+    xor eax, eax
+
+.loop:
+    call putc
+    inc al
+    mov cl, al
+    and cl, 0x0f
+    jnz .loop
+    push eax
+    mov al, 0xa
+    call putc
+    pop eax
+    cmp al, 128
+    jb .loop
+
+    pop ebp
+    ret
+
 cursor_x: dd 0
 cursor_y: dd 0
