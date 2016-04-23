@@ -154,6 +154,30 @@ print_hex_value_8:
     pop ebp
     ret
 
+register_names:
+.eax: db 'EAX', 0
+.ebx: db 'EBX', 0
+.ecx: db 'ECX', 0
+.edx: db 'EDX', 0
+.esi: db 'ESI', 0
+.edi: db 'EDI', 0
+.ebp: db 'EBP', 0
+.esp: db 'ESP', 0
+
+print_register_name:
+    push esi
+    mov esi, [esp + 8]
+    lodsb
+    call putc
+    lodsb
+    call putc
+    lodsb
+    call putc
+    mov al, 0x3d ; '='
+    call putc
+    pop esi
+    ret
+
 print_registers:
     ; We assume we're called right after a pushad,
     ; so all the registers are on the stack
@@ -162,24 +186,36 @@ print_registers:
     push ebp
     mov ebp, esp
 
+    push register_names.eax
+    call print_register_name
+    add esp, 4
     mov eax, [ebp + 0x24] ; EAX
     push eax
     call print_hex_value_32
     add esp, 4
     mov al, 0x20 ; ' '
     call putc
+    push register_names.ebx
+    call print_register_name
+    add esp, 4
     mov eax, [ebp + 0x18] ; EBX
     push eax
     call print_hex_value_32
     add esp, 4
     mov al, 0x20 ; ' '
     call putc
+    push register_names.ecx
+    call print_register_name
+    add esp, 4
     mov eax, [ebp + 0x20] ; ECX
     push eax
     call print_hex_value_32
     add esp, 4
     mov al, 0x20 ; ' '
     call putc
+    push register_names.edx
+    call print_register_name
+    add esp, 4
     mov eax, [ebp + 0x1c] ; EDX
     push eax
     call print_hex_value_32
@@ -187,24 +223,36 @@ print_registers:
     mov al, 0x0a ; '\n'
     call putc
 
+    push register_names.esi
+    call print_register_name
+    add esp, 4
     mov eax, [ebp + 0x0c] ; ESI
     push eax
     call print_hex_value_32
     add esp, 4
     mov al, 0x20 ; ' '
     call putc
+    push register_names.edx
+    call print_register_name
+    add esp, 4
     mov eax, [ebp + 0x08] ; EDI
     push eax
     call print_hex_value_32
     add esp, 4
     mov al, 0x20 ; ' '
     call putc
+    push register_names.ebp
+    call print_register_name
+    add esp, 4
     mov eax, [ebp + 0x10] ; EBP
     push eax
     call print_hex_value_32
     add esp, 4
     mov al, 0x20 ; ' '
     call putc
+    push register_names.esp
+    call print_register_name
+    add esp, 4
     mov eax, [ebp + 0x14] ; ESP
     push eax
     call print_hex_value_32
