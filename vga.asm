@@ -98,5 +98,61 @@ print_ascii_table:
     pop ebp
     ret
 
+print_hex_value_32:
+    mov ecx, 8
+    jmp print_hex_value_8.common_start
+
+print_hex_value_16:
+    mov ecx, 4
+    jmp print_hex_value_8.common_start
+
+print_hex_value_8:
+    mov ecx, 2
+
+.common_start:
+    push ebp
+    mov ebp, esp
+    mov edx, [ebp + 8]
+
+    push ecx
+    mov al, 0x30 ; '0'
+    call putc
+    mov al, 0x78 ; 'x'
+    call putc
+    pop ecx
+
+    push edi
+    push ecx
+    mov edi, esp
+    times 2 push dword 0x00000000
+.format_loop:
+    xor eax, eax
+    mov al, dl
+    and al, 0x0f
+    add al, 0x30
+    cmp al, 0x3a
+    jl .skip
+    add al, 0x27
+.skip:
+    dec edi
+    mov byte [edi], al
+    shr edx, 4
+    dec ecx
+    jnz .format_loop
+    mov ecx, [ebp - 8]
+.print_loop:
+    mov byte al, [edi]
+    push ecx
+    call putc
+    pop ecx
+    inc edi
+    dec ecx
+    jnz .print_loop
+
+    add esp, 12
+    pop edi
+    pop ebp
+    ret
+
 cursor_x: dd 0
 cursor_y: dd 0

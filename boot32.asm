@@ -109,6 +109,17 @@ setup_idt:
     add esp, 4
 
     call print_ascii_table
+
+    ; Print an empty line
+    push dword 0
+    mov esi, esp
+    call println
+    add esp, 4
+
+    push dword 0xdeadbeef
+    call print_hex_value_32
+    add esp, 4
+
     ; xor ecx, ecx
     ; call load_program
 
