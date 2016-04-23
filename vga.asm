@@ -154,5 +154,66 @@ print_hex_value_8:
     pop ebp
     ret
 
+print_registers:
+    ; We assume we're called right after a pushad,
+    ; so all the registers are on the stack
+    ; TODO: Is that safe? Is `pushad` hardware-
+    ; independent?
+    push ebp
+    mov ebp, esp
+
+    mov eax, [ebp + 0x24] ; EAX
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x20 ; ' '
+    call putc
+    mov eax, [ebp + 0x18] ; EBX
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x20 ; ' '
+    call putc
+    mov eax, [ebp + 0x20] ; ECX
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x20 ; ' '
+    call putc
+    mov eax, [ebp + 0x1c] ; EDX
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x0a ; '\n'
+    call putc
+
+    mov eax, [ebp + 0x0c] ; ESI
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x20 ; ' '
+    call putc
+    mov eax, [ebp + 0x08] ; EDI
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x20 ; ' '
+    call putc
+    mov eax, [ebp + 0x10] ; EBP
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x20 ; ' '
+    call putc
+    mov eax, [ebp + 0x14] ; ESP
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x0a ; '\n'
+    call putc
+
+    pop ebp
+    ret
+
 cursor_x: dd 0
 cursor_y: dd 0
