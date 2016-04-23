@@ -116,20 +116,8 @@ setup_idt:
     call println
     add esp, 4
 
-    ; xor ecx, ecx
-    ; call load_program
-
-    mov eax, 0x01010101
-    mov ebx, 0x02020202
-    mov ecx, 0x03030303
-    mov edx, 0x04040404
-    mov esi, 0x05050505
-    mov edi, 0x06060606
-    mov ebp, 0x07070707
-    pushad
-    call print_registers
-    popad
-
+    xor ecx, ecx
+    call load_program
 
 halt:
     cli

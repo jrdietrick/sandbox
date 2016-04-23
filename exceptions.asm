@@ -20,6 +20,9 @@ exception_handler_13_general_protection_fault:
     pushad
     mov esi, string_general_protection_fault
     call println
+    mov al, 0x0a ; '\n'
+    call putc
+    call print_registers
     jmp exception_spin
 
 exception_handler_14_page_fault:
