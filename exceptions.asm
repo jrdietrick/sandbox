@@ -23,6 +23,10 @@ exception_handler_13_general_protection_fault:
     mov al, 0x0a ; '\n'
     call putc
     call print_registers
+    mov eax, [esp + 0x0c] ; saved ESP
+    push eax
+    call print_exception_stack
+    add esp, 4
     jmp exception_spin
 
 exception_handler_14_page_fault:

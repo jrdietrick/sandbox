@@ -154,6 +154,19 @@ print_hex_value_8:
     pop ebp
     ret
 
+print_exception_stack:
+    push register_names.eip
+    call print_register_name
+    add esp, 4
+    mov ecx, [esp + 0x04]
+    mov eax, [ecx + 0x04]
+    push eax
+    call print_hex_value_32
+    add esp, 4
+    mov al, 0x0a ; '\n'
+    call putc
+    ret
+
 register_names:
 .eax: db 'EAX', 0
 .ebx: db 'EBX', 0
@@ -163,6 +176,7 @@ register_names:
 .edi: db 'EDI', 0
 .ebp: db 'EBP', 0
 .esp: db 'ESP', 0
+.eip: db 'EIP', 0
 
 print_register_name:
     push esi
