@@ -61,16 +61,19 @@ putc:
 .done:
     ret
 
-println:
+puts:
 .loop:
     lodsb
     cmp al, 0
     je .done
     call putc
     jmp .loop
-
 .done:
-    mov al, 0xa
+    ret
+
+println:
+    call puts
+    mov al, 0x0a ; '\n'
     call putc
     ret
 
