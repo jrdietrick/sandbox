@@ -4,6 +4,26 @@ db 'vga.asm', 0
 
 align 16, db 0
 
+%macro print_space 0
+    mov al, 0x20 ; ' '
+    call putc
+%endmacro
+
+%macro print_newline 0
+    mov al, 0x0a ; '\n'
+    call putc
+%endmacro
+
+%macro print_register 2
+    push register_names.%1
+    call print_register_name
+    add esp, 4
+    mov eax, [ebp + %2]
+    push eax
+    call print_hex_value_32
+    add esp, 4
+%endmacro
+
 disable_cursor:
     ; Disable the cursor
     xor eax, eax
@@ -92,8 +112,7 @@ print_ascii_table:
     and cl, 0x0f
     jnz .loop
     push eax
-    mov al, 0xa
-    call putc
+    print_newline
     pop eax
     cmp al, 128
     jb .loop
@@ -198,79 +217,23 @@ print_registers:
     push ebp
     mov ebp, esp
 
-    push register_names.eax
-    call print_register_name
-    add esp, 4
-    mov eax, [ebp + 0x24] ; EAX
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x20 ; ' '
-    call putc
-    push register_names.ebx
-    call print_register_name
-    add esp, 4
-    mov eax, [ebp + 0x18] ; EBX
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x20 ; ' '
-    call putc
-    push register_names.ecx
-    call print_register_name
-    add esp, 4
-    mov eax, [ebp + 0x20] ; ECX
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x20 ; ' '
-    call putc
-    push register_names.edx
-    call print_register_name
-    add esp, 4
-    mov eax, [ebp + 0x1c] ; EDX
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x0a ; '\n'
-    call putc
+    print_register eax, 0x24
+    print_space
+    print_register ebx, 0x18
+    print_space
+    print_register ecx, 0x20
+    print_space
+    print_register edx, 0x1c
+    print_newline
 
-    push register_names.esi
-    call print_register_name
-    add esp, 4
-    mov eax, [ebp + 0x0c] ; ESI
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x20 ; ' '
-    call putc
-    push register_names.edx
-    call print_register_name
-    add esp, 4
-    mov eax, [ebp + 0x08] ; EDI
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x20 ; ' '
-    call putc
-    push register_names.ebp
-    call print_register_name
-    add esp, 4
-    mov eax, [ebp + 0x10] ; EBP
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x20 ; ' '
-    call putc
-    push register_names.esp
-    call print_register_name
-    add esp, 4
-    mov eax, [ebp + 0x14] ; ESP
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x0a ; '\n'
-    call putc
+    print_register esi, 0x0c
+    print_space
+    print_register edi, 0x08
+    print_space
+    print_register ebp, 0x10
+    print_space
+    print_register esp, 0x14
+    print_newline
 
     pop ebp
     ret

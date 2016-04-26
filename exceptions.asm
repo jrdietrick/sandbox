@@ -20,8 +20,7 @@ exception_handler_13_general_protection_fault:
     pushad
     mov esi, string_general_protection_fault
     call println
-    mov al, 0x0a ; '\n'
-    call putc
+    print_newline
     call print_registers
     mov eax, [esp + 0x0c] ; saved ESP
     push eax
