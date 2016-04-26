@@ -184,12 +184,7 @@ register_names:
 print_register_name:
     push esi
     mov esi, [esp + 8]
-    lodsb
-    call putc
-    lodsb
-    call putc
-    lodsb
-    call putc
+    call puts
     mov al, 0x3d ; '='
     call putc
     pop esi
