@@ -54,7 +54,7 @@ clear_screen:
     ret
 
 putc:
-    cmp al, 0xa
+    cmp al, 0x0a
     je .newline
 
     ; Calculate memory address
