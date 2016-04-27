@@ -219,6 +219,7 @@ idt:
 
 %include "vga.asm"
 %include "exceptions.asm"
+%include "syscalls.asm"
 %include "vm.asm"
 
 align 16, db 0

@@ -33,11 +33,6 @@ exception_handler_14_page_fault:
     call println
     jmp exception_spin
 
-system_call_handler:
-    mov esi, string_system_call
-    call println
-    iret
-
 exception_spin:
     cli
     hlt
