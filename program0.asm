@@ -11,7 +11,7 @@ _start:
 spin:
     jmp spin
 
-string_to_print: db 'this is a string from userspace', 0x0a, 0
+string_to_print: db 'this is a string from userspace!', 0x0a, 0x0a, 0
 
 strlen:
     xor eax, eax
