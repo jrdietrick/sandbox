@@ -28,7 +28,7 @@ boot16.o: boot16.asm
 program0: program0.o
 	$(CC) $(LDFLAGS) -Ttext=0x02000000 $< -o $@
 
-program0.o: program0.asm
+program0.o: program0.asm userlib.asm
 	$(AS) $(ASFLAGS) -o $@ $<
 
 clean:
