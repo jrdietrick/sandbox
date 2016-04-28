@@ -82,6 +82,8 @@ start32:
     mov cx, KERNEL_TSS
     ltr cx
 
+    call check_for_apic
+
 setup_idt:
     mov ecx, 0
 
@@ -229,7 +231,7 @@ idt:
 %include "syscalls.asm"
 %include "vm.asm"
 %include "loader.asm"
-%include "pic.asm"
+%include "apic.asm"
 %include "keyboard.asm"
 
 align 16, db 0

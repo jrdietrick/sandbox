@@ -54,7 +54,7 @@ kernel.o.text: kernel.o
 kernel.o: kernel.bin
 	$(CC) $(LDFLAGS) -Ttext=$(LOAD_LOCATION) -o $@ $<
 
-kernel.bin: boot32.asm exceptions.asm loader.asm vga.asm vm.asm syscalls.asm pic.asm keyboard.asm
+kernel.bin: boot32.asm exceptions.asm loader.asm vga.asm vm.asm syscalls.asm apic.asm keyboard.asm
 	$(AS) $(ASFLAGS) -DLOAD_LOCATION=$(LOAD_LOCATION) -o $@ $<
 
 # The MBR code is compiled raw (not an ELF),
