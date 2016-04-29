@@ -10,6 +10,8 @@ align 16, db 0
 %define BOOTSTRAP_PROCESSOR FLAG(8)
 %define APIC_GLOBAL_ENABLE FLAG(11)
 
+%define APIC_SOFTWARE_ENABLE FLAG(8)
+
 check_for_apic:
     mov eax, 1
     cpuid
@@ -27,4 +29,10 @@ check_for_apic:
     jne assert_false
     cmp eax, APIC_BASE | BOOTSTRAP_PROCESSOR | APIC_GLOBAL_ENABLE
     jne assert_false
+
+    ; Try to enable it?
+    mov eax, [APIC_BASE + 0xf0]
+    or eax, APIC_SOFTWARE_ENABLE
+    mov [APIC_BASE + 0xf0], eax
+
     ret

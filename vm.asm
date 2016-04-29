@@ -32,9 +32,11 @@ basic_paging_setup:
     ; 0-4MB identity-paged for kernel
     ; 32-36MB identity-paged for usermode code
     ; 40-44MB identity-paged for usermode stack
+    ; 4076-4080MB identity-paged for kernel (APIC)
     mov dword [PAGE_DIRECTORY_LOCATION + (4 * 0)], 0x00000000 | PTE_PRESENT | PTE_4MB
     mov dword [PAGE_DIRECTORY_LOCATION + (4 * 8)], 0x02000000 | PTE_PRESENT | PTE_USER_ACCESSIBLE | PTE_4MB
     mov dword [PAGE_DIRECTORY_LOCATION + (4 * 10)], 0x02800000 | PTE_PRESENT | PTE_RW | PTE_USER_ACCESSIBLE | PTE_4MB
+    mov dword [PAGE_DIRECTORY_LOCATION + (4 * 1019)], 0xfec00000 | PTE_PRESENT | PTE_4MB
 
     ; Turn paging on!
     mov eax, cr4
