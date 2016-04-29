@@ -119,10 +119,13 @@ setup_idt:
     xor ecx, ecx
     call load_program
 
-halt:
-    cli
-    hlt
-    jmp halt
+    call assert_false
+assert_false:
+    ; If we end up here, something very
+    ; unexpected happened. Fire off a debug
+    ; exception, which we will never return
+    ; from.
+    int 0x1
 
 load_program:
     ; Calculate the starting address of
