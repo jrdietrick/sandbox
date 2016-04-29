@@ -6,8 +6,11 @@ align 16, db 0
 
 exception_handler:
     pushad
+    print_newline
     mov esi, string_exception
     call println
+    print_newline
+    call print_registers
     jmp exception_spin
 
 exception_handler_8_double_fault:
@@ -18,6 +21,7 @@ exception_handler_8_double_fault:
 
 exception_handler_13_general_protection_fault:
     pushad
+    print_newline
     mov esi, string_general_protection_fault
     call println
     print_newline
