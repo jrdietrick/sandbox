@@ -19,7 +19,7 @@ kernel: boot32.o boot16.o program0
 	dd if=program0.o.text of=disk_image bs=512 seek=17 conv=notrunc
 	rm *.o.text
 
-boot32.o: boot32.asm exceptions.asm vga.asm vm.asm syscalls.asm
+boot32.o: boot32.asm exceptions.asm vga.asm vm.asm syscalls.asm pic.asm
 	$(AS) $(ASFLAGS) -DLOAD_LOCATION=$(LOAD_LOCATION) -o $@ $<
 
 boot16.o: boot16.asm

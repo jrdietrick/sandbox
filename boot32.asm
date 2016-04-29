@@ -110,6 +110,8 @@ setup_idt:
 
     call print_ascii_table
 
+    call initialize_8259
+
     ; Print an empty line
     push dword 0
     mov esi, esp
@@ -224,6 +226,7 @@ idt:
 %include "exceptions.asm"
 %include "syscalls.asm"
 %include "vm.asm"
+%include "pic.asm"
 
 align 16, db 0
 

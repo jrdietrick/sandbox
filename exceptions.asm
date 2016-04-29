@@ -93,8 +93,12 @@ exception_jump_table:
     dd exception_handler
     dd exception_handler
 
-    ; 32-127
-    times 96 dd 0
+    ; 32-47
+    ; 8259 PIC
+    times 16 dd exception_handler
+
+    ; 48-127
+    times 80 dd 0
 
     ; 128
     dd system_call_handler
