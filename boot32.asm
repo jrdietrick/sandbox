@@ -236,5 +236,6 @@ string_double_fault: db 'DOUBLE FAULT', 0
 string_general_protection_fault: db 'GENERAL PROTECTION FAULT', 0
 string_page_fault: db 'PAGE FAULT', 0
 string_system_call: db 'SYSTEM CALL', 0
+string_pic_interrupt: db 'INTERRUPT', 0
 
 align 16, db 0

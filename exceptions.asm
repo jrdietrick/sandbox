@@ -37,6 +37,11 @@ exception_handler_14_page_fault:
     call println
     jmp exception_spin
 
+pic_interrupt:
+    mov esi, string_pic_interrupt
+    call println
+    jmp exception_spin
+
 exception_spin:
     cli
     hlt
@@ -95,7 +100,7 @@ exception_jump_table:
 
     ; 32-47
     ; 8259 PIC
-    times 16 dd exception_handler
+    times 16 dd pic_interrupt
 
     ; 48-127
     times 80 dd 0
