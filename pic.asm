@@ -15,26 +15,36 @@ disable_irq:
     ret
 
 initialize_8259:
-    mov dx, MASTER_PIC_COMMAND
+    push ebx
+
+    ; Save existing masks
+    in ax, MASTER_PIC_DATA
+    mov bx, ax
+    in ax, SLAVE_PIC_DATA
+    mov cx, ax
+
     mov ax, 0x11
-    out dx, ax
-    mov dx, MASTER_PIC_DATA
+    out MASTER_PIC_COMMAND, ax
     mov ax, 0x20
-    out dx, ax
+    out MASTER_PIC_DATA, ax
     mov ax, 0x04
-    out dx, ax
+    out MASTER_PIC_DATA, ax
     mov ax, 0x01
-    out dx, ax
-    mov dx, SLAVE_PIC_COMMAND
+    out MASTER_PIC_DATA, ax
     mov ax, 0x11
-    out dx, ax
-    mov dx, SLAVE_PIC_DATA
+    out SLAVE_PIC_COMMAND, ax
     mov ax, 0x28
-    out dx, ax
+    out SLAVE_PIC_DATA, ax
     mov ax, 0x02
-    out dx, ax
+    out SLAVE_PIC_DATA, ax
     mov ax, 0x01
-    out dx, ax
+    out SLAVE_PIC_DATA, ax
+
+    ; Restore masks
+    mov ax, bx
+    out MASTER_PIC_DATA, ax
+    mov ax, cx
+    out SLAVE_PIC_DATA, ax
 
     ; Disable all IRQs
     mov ecx, 0
@@ -46,4 +56,5 @@ initialize_8259:
     cmp ecx, 16
     jl .loop
 
+    pop ebx
     ret
