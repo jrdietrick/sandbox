@@ -10,8 +10,24 @@ align 16, db 0
 %define SLAVE_PIC_DATA (SLAVE_PIC_COMMAND + 1)
 
 disable_irq:
-    ; TODO
-    nop
+    mov eax, [esp + 0x04]
+    mov dx, MASTER_PIC_DATA
+    cmp eax, 7
+    jle .master
+    mov dx, SLAVE_PIC_DATA
+    add eax, -8
+.master:
+    mov ecx, 1
+.shift:
+    cmp eax, 0
+    je .done
+    shl ecx, 1
+    dec eax
+    jmp .shift
+.done:
+    in al, dx
+    or al, cl
+    out dx, ax
     ret
 
 initialize_8259:
