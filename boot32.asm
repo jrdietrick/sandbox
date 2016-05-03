@@ -9,6 +9,9 @@
 %define USER_CODE_SEGMENT   0x0023
 %define USER_DATA_SEGMENT   0x002b
 
+%define GDT_DESCRIPTOR_PRESENT FLAG(47)
+%define TSS_DESCRIPTOR_TYPE (0x9 << 40)
+
 %define VGA_START 0x000b8000
 %define USER_LOAD_LOCATION 0x02000000
 %define USER_STACK_LOCATION 0x02400000
@@ -203,7 +206,7 @@ align 8, db 0
 gdt: ; GDT should be 8-byte aligned
     dq 0
 .tss_entry:
-    dq 0x0000890000000000 ; TSS entry, will be filled in further at start
+    dq GDT_DESCRIPTOR_PRESENT | TSS_DESCRIPTOR_TYPE ; TSS entry, will be filled in further at start
     dq 0x00cf9a000000ffff ; kernel code segment
     dq 0x00cf92000000ffff ; kernel data segment
     dq 0x00cffa000000ffff ; user code segment
