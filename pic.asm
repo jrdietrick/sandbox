@@ -33,7 +33,7 @@ enable_irq:
     not ecx
     in al, dx
     and al, cl
-    out dx, ax
+    out dx, al
     ret
 
 disable_irq:
@@ -48,40 +48,40 @@ disable_irq:
     call irq_bitmask
     in al, dx
     or al, cl
-    out dx, ax
+    out dx, al
     ret
 
 initialize_8259:
     push ebx
 
     ; Save existing masks
-    in ax, MASTER_PIC_DATA
-    mov bx, ax
-    in ax, SLAVE_PIC_DATA
-    mov cx, ax
+    in al, MASTER_PIC_DATA
+    mov bl, al
+    in al, SLAVE_PIC_DATA
+    mov cl, al
 
-    mov ax, 0x11
-    out MASTER_PIC_COMMAND, ax
-    mov ax, 0x20
-    out MASTER_PIC_DATA, ax
-    mov ax, 0x04
-    out MASTER_PIC_DATA, ax
-    mov ax, 0x01
-    out MASTER_PIC_DATA, ax
-    mov ax, 0x11
-    out SLAVE_PIC_COMMAND, ax
-    mov ax, 0x28
-    out SLAVE_PIC_DATA, ax
-    mov ax, 0x02
-    out SLAVE_PIC_DATA, ax
-    mov ax, 0x01
-    out SLAVE_PIC_DATA, ax
+    mov al, 0x11
+    out MASTER_PIC_COMMAND, al
+    mov al, 0x20
+    out MASTER_PIC_DATA, al
+    mov al, 0x04
+    out MASTER_PIC_DATA, al
+    mov al, 0x01
+    out MASTER_PIC_DATA, al
+    mov al, 0x11
+    out SLAVE_PIC_COMMAND, al
+    mov al, 0x28
+    out SLAVE_PIC_DATA, al
+    mov al, 0x02
+    out SLAVE_PIC_DATA, al
+    mov al, 0x01
+    out SLAVE_PIC_DATA, al
 
     ; Restore masks
-    mov ax, bx
-    out MASTER_PIC_DATA, ax
-    mov ax, cx
-    out SLAVE_PIC_DATA, ax
+    mov al, bl
+    out MASTER_PIC_DATA, al
+    mov al, cl
+    out SLAVE_PIC_DATA, al
 
     ; Disable all IRQs
     mov ecx, 0
