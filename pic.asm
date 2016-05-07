@@ -17,7 +17,7 @@ irq_bitmask:
     shl ecx, 1
     dec eax
     jmp .shift
-.done
+.done:
     ret
 
 enable_irq:
