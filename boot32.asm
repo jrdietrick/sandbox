@@ -131,8 +131,9 @@ setup_idt:
     call println
     add esp, 4
 
-    xor ecx, ecx
-    call load_program
+halt:
+    hlt
+    jmp halt
 
     call assert_false
 assert_false:
