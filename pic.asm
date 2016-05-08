@@ -9,6 +9,8 @@ align 16, db 0
 %define SLAVE_PIC_COMMAND 0xa0
 %define SLAVE_PIC_DATA (SLAVE_PIC_COMMAND + 1)
 
+%define COMMAND_EOI 0x20
+
 %define RTC_COMMAND_PORT 0x70
 %define RTC_DATA_PORT (RTC_COMMAND_PORT + 1)
 
@@ -101,6 +103,22 @@ initialize_8259:
     call enable_irq
     add esp, 4
 
+    call rtc_init
+
+    pop ebx
+    ret
+
+send_eoi:
+    mov al, COMMAND_EOI
+    mov ecx, [esp + 0x04]
+    cmp ecx, 8
+    jl .master_only
+    out SLAVE_PIC_COMMAND, al
+.master_only:
+    out MASTER_PIC_COMMAND, al
+    ret
+
+rtc_init:
     ; Set up the real-time clock (IRQ 8)
     mov al, 0x0a
     out RTC_COMMAND_PORT, al
@@ -115,5 +133,8 @@ initialize_8259:
     call enable_irq
     add esp, 4
 
-    pop ebx
+rtc_clear:
+    mov al, 0x0c
+    out RTC_COMMAND_PORT, al
+    in al, RTC_DATA_PORT
     ret
