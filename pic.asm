@@ -9,6 +9,9 @@ align 16, db 0
 %define SLAVE_PIC_COMMAND 0xa0
 %define SLAVE_PIC_DATA (SLAVE_PIC_COMMAND + 1)
 
+%define RTC_COMMAND_PORT 0x70
+%define RTC_DATA_PORT (RTC_COMMAND_PORT + 1)
+
 irq_bitmask:
     mov ecx, 1
 .shift:
@@ -92,6 +95,25 @@ initialize_8259:
     inc ecx
     cmp ecx, 16
     jl .loop
+
+    ; But re-enable IRQ 2 for daisy-chaining
+    push 2
+    call enable_irq
+    add esp, 4
+
+    ; Set up the real-time clock (IRQ 8)
+    mov al, 0x0a
+    out RTC_COMMAND_PORT, al
+    mov al, 0x2f
+    out RTC_DATA_PORT, al
+    mov al, 0x0b
+    out RTC_COMMAND_PORT, al
+    mov al, 0x40
+    out RTC_DATA_PORT, al
+
+    push 8
+    call enable_irq
+    add esp, 4
 
     pop ebx
     ret
