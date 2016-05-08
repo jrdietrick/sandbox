@@ -93,7 +93,7 @@ setup_idt:
     add esp, 4
 
     inc ecx
-    cmp ecx, 32
+    cmp ecx, 48
     jl .loop
 
     ; System call gate
