@@ -71,12 +71,12 @@ putc:
     ; Increment
     add byte [cursor_x], 1
     cmp byte [cursor_x], 80
-    jne .done
+    jl .done
 .newline:
     mov byte [cursor_x], 0
     add byte [cursor_y], 1
     cmp byte [cursor_y], 25
-    jne .done
+    jl .done
     call clear_screen
 .done:
     ret
