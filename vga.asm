@@ -62,7 +62,7 @@ putc:
     mov ecx, dword [cursor_y]
     imul ecx, 80
     add ecx, dword [cursor_x]
-    imul ecx, 2
+    shl ecx, 1
 
     ; AL contains the byte to write
     mov ah, 0x07
