@@ -57,6 +57,11 @@ putc:
     cmp al, 0x0a
     je .newline
 
+    cmp byte [cursor_y], 25
+    jl .no_clear_screen
+    call clear_screen
+.no_clear_screen:
+
     ; Calculate memory address
     xor ecx, ecx
     mov ecx, dword [cursor_y]
@@ -75,9 +80,6 @@ putc:
 .newline:
     mov byte [cursor_x], 0
     add byte [cursor_y], 1
-    cmp byte [cursor_y], 25
-    jl .done
-    call clear_screen
 .done:
     ret
 
