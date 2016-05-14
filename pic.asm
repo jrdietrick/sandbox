@@ -105,6 +105,11 @@ initialize_8259:
 
     call rtc_init
 
+    ; Enable the keyboard
+    push 1
+    call enable_irq
+    add esp, 4
+
     pop ebx
     ret
 

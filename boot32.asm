@@ -245,6 +245,7 @@ idt:
 %include "syscalls.asm"
 %include "vm.asm"
 %include "pic.asm"
+%include "keyboard.asm"
 
 align 16, db 0
 

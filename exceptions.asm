@@ -111,7 +111,7 @@ exception_jump_table:
     ; 8259 PIC
     ; IRQ 0
     dd 0
-    dd 0
+    dd keyboard_interrupt_handler
     dd 0
     dd 0
     dd 0
