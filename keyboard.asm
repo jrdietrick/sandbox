@@ -11,6 +11,14 @@ align 16, db 0
 
 keyboard_interrupt_handler:
     pushad
+
+.read:
+    in al, KEYBOARD_STATUS_PORT
+    and al, KEYBOARD_STATUS_HAS_KEY
+    jz .done
+    in al, KEYBOARD_DATA_PORT
+    jmp .read
+.done:
     push dword 1
     call send_eoi
     add esp, 4
