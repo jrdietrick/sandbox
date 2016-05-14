@@ -1,6 +1,6 @@
 align 16, db 0
 
-db 'apic.asm', 0
+db 'pic.asm', 0
 
 align 16, db 0
 
