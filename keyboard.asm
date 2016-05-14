@@ -12,14 +12,27 @@ align 16, db 0
 %define NON_PRINTABLE_CHARACTER 0xff
 %define NPC NON_PRINTABLE_CHARACTER
 
+%define SCANCODE_EXTENDED_SET 0xe0
+%define SCANCODE_BREAK FLAG(7)
+
 keyboard_interrupt_handler:
     pushad
 
 .read:
+    xor eax, eax
     in al, KEYBOARD_STATUS_PORT
     and al, KEYBOARD_STATUS_HAS_KEY
     jz .done
     in al, KEYBOARD_DATA_PORT
+    cmp al, SCANCODE_EXTENDED_SET
+    je .read
+    test al, SCANCODE_BREAK
+    jnz .read
+    lea ecx, [eax + scancode_table]
+    mov al, [ecx]
+    cmp al, NPC
+    je .read
+    call putc
     jmp .read
 .done:
     push dword 1
