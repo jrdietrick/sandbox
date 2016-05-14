@@ -39,9 +39,6 @@ exception_handler_14_page_fault:
 
 rtc_tick:
     pushad
-    ; Print a nice string
-    mov esi, string_pic_interrupt
-    call println
     ; Acknowledge the RTC tick
     call rtc_clear
     ; Send the EOI to the PIC
