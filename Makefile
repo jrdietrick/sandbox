@@ -8,6 +8,36 @@ CPPFLAGS += -m32 -nostdinc -g
 CC = gcc
 AS = nasm
 
+# Map of disk_image
+#
+#     0B +------------------------------------------------+
+#        | MBR sector (boot16.o)                          |
+#        | 512 bytes                                      |
+#   512B +------------------------------------------------+
+#        | Kernel (boot32.asm and dependencies)           |
+#        | .text only, extracted from `kernel` ELF        |
+#        \                                                /
+#        /                                                \
+#        \                                                /
+#        /                                                \
+#        | 8 kilobytes maximum (zero-padded if smaller)   |
+#        |                                                |
+#  8704B +------------------------------------------------+
+#        | Usermode program #0 (if exists)                |
+#        | 512 bytes                                      |
+#  9216B +------------------------------------------------+
+#        | Usermode program #1 (if exists)                |
+#        | 512 bytes                                      |
+#  9728B +------------------------------------------------+
+#        \                                                /
+#        / Usermode programs #2-14 (if exist)             \
+#        \ 512 bytes each                                 /
+#        /                                                \
+# 16384B +------------------------------------------------+
+#        | Usermode program #15 (if exists)               |
+#        | 512 bytes                                      |
+# 16896B +------------------------------------------------+
+
 kernel: boot32.o boot16.o program0
 	$(CC) $(LDFLAGS) -Ttext=$(LOAD_LOCATION) boot32.o -o $@
 	cat boot16.o > disk_image
