@@ -123,13 +123,17 @@ setup_idt:
 
     call print_ascii_table
 
-    call initialize_8259
-
-    ; Print an empty line
     push dword 0
-    mov esi, esp
-    call println
+    call load_program
     add esp, 4
+
+    ; call initialize_8259
+
+    ; ; Print an empty line
+    ; push dword 0
+    ; mov esi, esp
+    ; call println
+    ; add esp, 4
 
 halt:
     hlt

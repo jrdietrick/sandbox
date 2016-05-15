@@ -2,3 +2,4 @@
 *.o.text
 *.bin
 disk_image
+usermode_programs/fs_image

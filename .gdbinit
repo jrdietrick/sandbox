@@ -1,3 +1,3 @@
-add-symbol-file kernel 0x8000
-add-symbol-file program0 0x2000000
+add-symbol-file kernel.o 0x8000
+directory usermode_programs
 target remote localhost:1234
