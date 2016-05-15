@@ -148,7 +148,8 @@ load_program:
     ; the program we're loading on our
     ; "filesystem"
     mov esi, 0xc000
-    imul ecx, 8
+    mov ecx, [esp + 0x04]
+    shl ecx, 9
     add esi, ecx
     mov edi, USER_LOAD_LOCATION ; load program at 32MB
     mov ecx, 0x80 ; move 128 dwords (one sector)
