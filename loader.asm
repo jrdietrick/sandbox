@@ -7,16 +7,77 @@ align 16, db 0
 %define USER_LOAD_LOCATION 0x02000000
 %define USER_STACK_LOCATION 0x02400000
 
+%define ELF_MAGIC 0x464c457f
+%define ELF_32BIT 1
+%define ELF_LITTLE_ENDIAN 1
+%define ELF_VERSION 1
+%define ELF_X86 0x03
+%define ELF_SECTION_HEADER_ENTRY_SIZE 0x28
+%define ELF_SECTION_HEADER_TYPE_STRTAB 0x00000003
+
+text_section: db '.text', 0
+
+get_section_names_base:
+    mov edx, [esp + 0x04]
+    mov eax, [edx + 0x20]
+    mov cx, [edx + 0x32] ; index of the section names section
+    add edx, eax
+.loop:
+    cmp cx, 0
+    je .done
+    add edx, ELF_SECTION_HEADER_ENTRY_SIZE
+    dec cx
+    jmp .loop
+.done:
+    ; Double check this is the right section
+    mov eax, [edx + 0x04]
+    cmp eax, ELF_SECTION_HEADER_TYPE_STRTAB
+    jne bad_elf_format
+    mov eax, [edx + 0x10]
+    ret
+
 load_program:
     ; Calculate the starting address of
     ; the program we're loading on our
     ; "filesystem"
-    mov esi, 0xc000
     mov ecx, [esp + 0x04]
-    shl ecx, 9
-    add esi, ecx
+    ; Programs are 4kB apart on disk
+    shl ecx, 12
+    lea esi, [ecx + 0xc000]
+
+    ; Check the ELF header
+    mov eax, [esi]
+    cmp eax, ELF_MAGIC
+    jne bad_elf_format
+    mov al, [esi + 0x04]
+    cmp al, ELF_32BIT
+    jne bad_elf_format
+    mov al, [esi + 0x05]
+    cmp al, ELF_LITTLE_ENDIAN
+    jne bad_elf_format
+    mov al, [esi + 0x06]
+    cmp al, ELF_VERSION
+    jne bad_elf_format
+    mov ax, [esi + 0x12]
+    cmp ax, ELF_X86
+    jne bad_elf_format
+    ; Make sure section header entries are 40 bytes
+    ; in size
+    mov ax, [esi + 0x2e]
+    cmp ax, ELF_SECTION_HEADER_ENTRY_SIZE
+    jne bad_elf_format
+
+    push esi
+    call get_section_names_base
+    add esp, 4
+
+    ; push text_section
+    ; push esi
+    ; call find_section
+    ; add esp, 8
+
     mov edi, USER_LOAD_LOCATION ; load program at 32MB
-    mov ecx, 0x80 ; move 128 dwords (one sector)
+    mov ecx, 0x400 ; move 1024 dwords (4kB)
     rep movsd
 
     cli
@@ -29,3 +90,6 @@ load_program:
     mov ax, USER_DATA_SEGMENT
     mov ds, ax
     iret
+
+bad_elf_format:
+    call assert_false

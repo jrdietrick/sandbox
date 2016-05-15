@@ -7,21 +7,19 @@ AS = nasm
 SRCS = program0.asm
 
 ELFS = $(patsubst %.asm,%.o,$(SRCS))
-RAW_BINS = $(patsubst %.asm,%.o.text,$(SRCS))
+BINS = $(patsubst %.asm,%.bin,$(SRCS))
 
-all: fs_image $(ELFS)
+all: fs_image $(ELFS) $(BINS)
 
-fs_image: $(RAW_BINS)
-	bash assemble_fs_image.sh $@ $(RAW_BINS)
-
-%.o.text: %.o
-	objcopy -O binary --only-section=.text $< $@
+fs_image: $(ELFS)
+	bash assemble_fs_image.sh $@ $(ELFS)
 
 %.o: %.bin
-	$(CC) $(LDFLAGS) -Ttext=0x02000000 $< -o $@
+	cp $< $@
+	strip -d $@
 
 %.bin: %.asm userlib.asm
 	$(AS) $(ASFLAGS) -o $@ $<
 
 clean:
-	rm -f $(RAW_BINS) $(ELFS) *.bin fs_image
+	rm -f $(ELFS) $(BINS) fs_image
