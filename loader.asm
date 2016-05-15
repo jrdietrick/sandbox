@@ -17,6 +17,39 @@ align 16, db 0
 
 text_section: db '.text', 0
 
+strcmp:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    mov ecx, [ebp + 0x08]
+    mov edx, [ebp + 0x0c]
+
+.loop:
+    mov al, [ecx]
+    mov bl, [edx]
+    cmp al, bl
+    jg .greater
+    jl .less
+    cmp al, 0
+    je .same
+    inc ecx
+    inc edx
+    jmp .loop
+
+.greater:
+    mov eax, 1
+    jmp .cleanup
+.less:
+    mov eax, -1
+    jmp .cleanup
+.same:
+    mov eax, 0
+.cleanup:
+    pop ebx
+    pop ebp
+    ret
+
 get_section_names_base:
     mov edx, [esp + 0x04]
     mov eax, [edx + 0x20]
