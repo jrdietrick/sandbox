@@ -8,6 +8,8 @@ CPPFLAGS += -m32 -nostdinc -g
 CC = gcc
 AS = nasm
 
+PROGRAMS_DIR = usermode_programs
+
 # Map of disk_image
 #
 #     0B +------------------------------------------------+
@@ -38,10 +40,14 @@ AS = nasm
 #        | 512 bytes                                      |
 # 16896B +------------------------------------------------+
 
-disk_image: boot16.bin kernel.o.text
-	cat boot16.bin > disk_image
-	dd if=/dev/zero bs=512 count=32 status=none >> disk_image
-	dd if=kernel.o.text of=disk_image bs=512 seek=1 conv=notrunc status=none
+disk_image: boot16.bin kernel.o.text fs_image
+	cat boot16.bin > $@
+	dd if=/dev/zero bs=512 count=16 status=none >> $@
+	dd if=kernel.o.text of=$@ bs=512 seek=1 count=16 conv=notrunc status=none
+	dd if=$(PROGRAMS_DIR)/fs_image of=$@ bs=512 seek=17 count=16 conv=notrunc status=none
+
+fs_image:
+	$(MAKE) -C $(PROGRAMS_DIR)
 
 kernel.o.text: kernel.o
 	objcopy -O binary --only-section=.text $< $@
@@ -59,3 +65,4 @@ boot16.bin: boot16.asm
 
 clean:
 	rm -f *.bin *.o *.o.text kernel disk_image
+	$(MAKE) -C $(PROGRAMS_DIR) clean
