@@ -5,7 +5,7 @@ db 'loader.asm', 0
 align 16, db 0
 
 %define USER_LOAD_LOCATION 0x02000000
-%define USER_STACK_LOCATION 0x02400000
+%define USER_STACK_LOCATION 0x02c00000
 
 %define ELF_MAGIC 0x464c457f
 %define ELF_32BIT 1
