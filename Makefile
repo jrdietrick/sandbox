@@ -26,25 +26,23 @@ PROGRAMS_DIR = usermode_programs
 #        |                                                |
 #  8704B +------------------------------------------------+
 #        | Usermode program #0 (if exists)                |
-#        | 512 bytes                                      |
-#  9216B +------------------------------------------------+
+#        | 4 kilobytes                                    |
+# 12800B +------------------------------------------------+
 #        | Usermode program #1 (if exists)                |
-#        | 512 bytes                                      |
-#  9728B +------------------------------------------------+
-#        \                                                /
-#        / Usermode programs #2-14 (if exist)             \
-#        \ 512 bytes each                                 /
-#        /                                                \
-# 16384B +------------------------------------------------+
-#        | Usermode program #15 (if exists)               |
-#        | 512 bytes                                      |
+#        | 4 kilobytes                                    |
 # 16896B +------------------------------------------------+
+#        | Usermode program #2 (if exists)                |
+#        | 4 kilobytes                                    |
+# 20992B +------------------------------------------------+
+#        | Usermode program #3 (if exists)                |
+#        | 4 kilobytes                                    |
+# 25088B +------------------------------------------------+
 
 disk_image: boot16.bin kernel.o.text fs_image
 	cat boot16.bin > $@
 	dd if=/dev/zero bs=512 count=16 status=none >> $@
 	dd if=kernel.o.text of=$@ bs=512 seek=1 count=16 conv=notrunc status=none
-	dd if=$(PROGRAMS_DIR)/fs_image of=$@ bs=512 seek=17 count=16 conv=notrunc status=none
+	dd if=$(PROGRAMS_DIR)/fs_image of=$@ bs=512 seek=17 count=32 conv=notrunc status=none
 
 fs_image:
 	$(MAKE) -C $(PROGRAMS_DIR)
@@ -55,7 +53,7 @@ kernel.o.text: kernel.o
 kernel.o: kernel.bin
 	$(CC) $(LDFLAGS) -Ttext=$(LOAD_LOCATION) -o $@ $<
 
-kernel.bin: boot32.asm exceptions.asm vga.asm vm.asm syscalls.asm pic.asm keyboard.asm
+kernel.bin: boot32.asm exceptions.asm loader.asm vga.asm vm.asm syscalls.asm pic.asm keyboard.asm
 	$(AS) $(ASFLAGS) -DLOAD_LOCATION=$(LOAD_LOCATION) -o $@ $<
 
 # The MBR code is compiled raw (not an ELF),
