@@ -13,6 +13,7 @@ align 16, db 0
 %define ELF_VERSION 1
 %define ELF_X86 0x03
 %define ELF_SECTION_HEADER_ENTRY_SIZE 0x28
+%define ELF_SECTION_HEADER_TYPE_PROGBITS 0x00000001
 %define ELF_SECTION_HEADER_TYPE_STRTAB 0x00000003
 
 text_section: db '.text', 0
@@ -69,6 +70,40 @@ get_section_names_base:
     mov eax, [edx + 0x10]
     ret
 
+find_section_header_entry:
+    push ebp
+    mov ebp, esp
+    mov eax, [esi + 0x20]
+    add eax, esi
+    mov cx, [esi + 0x30]
+.loop:
+    cmp cx, 0
+    je .done
+    mov edx, [eax]
+    add edx, ebx
+
+    push eax
+    push ecx
+    push edx
+    mov edx, [ebp + 0x08]
+    push edx
+    call strcmp
+    mov edx, eax
+    add esp, 8
+    pop ecx
+    pop eax
+
+    cmp edx, 0
+    je .found
+    dec ecx
+    add eax, ELF_SECTION_HEADER_ENTRY_SIZE
+    jmp .loop
+.done:
+    jmp bad_elf_format
+.found:
+    pop ebp
+    ret
+
 load_program:
     ; Calculate the starting address of
     ; the program we're loading on our
@@ -103,15 +138,37 @@ load_program:
     push esi
     call get_section_names_base
     add esp, 4
+    mov ebx, eax
+    add ebx, esi
 
-    ; push text_section
-    ; push esi
-    ; call find_section
-    ; add esp, 8
+    ; Find the .text section entry
+    push text_section
+    call find_section_header_entry
+    add esp, 4
+
+    ; Make sure it's a progbits section
+    mov ecx, [eax + 0x04]
+    cmp ecx, ELF_SECTION_HEADER_TYPE_PROGBITS
+    jne bad_elf_format
+
+    ; Get the source location using the offset
+    mov ecx, [eax + 0x10]
+    add esi, ecx
+
+    ; Get the number of bytes
+    mov ecx, [eax + 0x14]
+    add ecx, 3
+    shr ecx, 2 ; convert to dwords
 
     mov edi, USER_LOAD_LOCATION ; load program at 32MB
-    mov ecx, 0x400 ; move 1024 dwords (4kB)
     rep movsd
+
+    ; TEMP: fix the one known relocation in
+    ; our test program, just so I can prove
+    ; this is going to work
+    mov eax, [USER_LOAD_LOCATION + 0x01]
+    add eax, USER_LOAD_LOCATION
+    mov [USER_LOAD_LOCATION + 0x01], eax
 
     cli
     push dword USER_DATA_SEGMENT
