@@ -49,6 +49,7 @@ fs_image:
 
 kernel.o.text: kernel.o
 	objcopy -O binary --only-section=.text $< $@
+	test `wc -c < $@` -le 8192 || (echo '$@ exceeds allowable size!'; exit 1)
 
 kernel.o: kernel.bin
 	$(CC) $(LDFLAGS) -Ttext=$(LOAD_LOCATION) -o $@ $<

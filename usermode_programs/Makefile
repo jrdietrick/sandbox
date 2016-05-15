@@ -17,6 +17,7 @@ fs_image: $(ELFS)
 %.o: %.bin
 	cp $< $@
 	strip -d $@
+	test `wc -c < $@` -le 4096 || (echo '$@ exceeds allowable size!'; exit 1)
 
 %.bin: %.asm userlib.asm
 	$(AS) $(ASFLAGS) -o $@ $<
