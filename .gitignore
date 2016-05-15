@@ -1,5 +1,4 @@
 *.o
 *.o.text
+*.bin
 disk_image
-kernel
-program0
