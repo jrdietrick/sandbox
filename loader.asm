@@ -82,6 +82,7 @@ find_section_header_entry:
     ; ESI must be the base of the full ELF
     push ebp
     mov ebp, esp
+    push ebx
 
     push esi
     call get_section_names_base
@@ -117,6 +118,7 @@ find_section_header_entry:
 .done:
     jmp bad_elf_format
 .found:
+    pop ebx
     pop ebp
     ret
 
