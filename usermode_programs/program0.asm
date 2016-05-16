@@ -8,6 +8,10 @@ _start:
     call puts
     add esp, 4
 
+    push dword string_to_print
+    call puts
+    add esp, 4
+
     int 0xd
 
 spin:

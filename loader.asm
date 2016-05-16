@@ -17,10 +17,13 @@ align 16, db 0
 %define ELF_SECTION_HEADER_TYPE_STRTAB 0x00000003
 %define ELF_RELOCATION_ENTRY_SIZE 8
 %define ELF_RELOCATION_ENTRY_SIZE_LOG 3 ; relocation entries are 8 bytes each
+%define ELF_SYMBOL_TABLE_ENTRY_SIZE 16
+%define ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG 4 ; symbol table entries are 16 bytes each
 %define ELF_RELOCATION_TYPE_R_386_32 0x01
 
 text_section: db '.text', 0
 text_relocation_section: db '.rel.text', 0
+symbol_table_section: db '.symtab', 0
 
 strcmp:
     push ebp
@@ -72,11 +75,20 @@ get_section_names_base:
     cmp eax, ELF_SECTION_HEADER_TYPE_STRTAB
     jne bad_elf_format
     mov eax, [edx + 0x10]
+    add eax, [esp + 0x04]
     ret
 
 find_section_header_entry:
+    ; ESI must be the base of the full ELF
     push ebp
     mov ebp, esp
+
+    push esi
+    call get_section_names_base
+    add esp, 4
+    mov ebx, eax
+    ; EBX = base of the section names string table
+
     mov eax, [esi + 0x20]
     add eax, esi
     mov cx, [esi + 0x30]
@@ -108,7 +120,27 @@ find_section_header_entry:
     pop ebp
     ret
 
+get_symbol_table_entry_by_index:
+    ; ESI must be the base of the full ELF
+    push symbol_table_section
+    call find_section_header_entry
+    add esp, 4
+
+    ; EAX = base of the symbol table
+    mov eax, [eax + 0x10]
+    add eax, esi
+
+    ; ECX = symbol index
+    mov ecx, [esp + 0x04]
+    shl ecx, ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG
+    add eax, ecx
+    ret
+
 perform_relocations:
+    ; ESI must be the base of the full ELF
+    push ebp
+    mov ebp, esp
+    push ebx
     push edi
 
     push text_relocation_section
@@ -130,12 +162,29 @@ perform_relocations:
     cmp al, ELF_RELOCATION_TYPE_R_386_32
     jne bad_elf_format
     shr eax, 8
-    mov edi, [edx]
+
+    ; Get the symbol table entry by index
+    push edx
+    push ecx
+    push eax
+    call get_symbol_table_entry_by_index
+    add esp, 4
+    pop ecx
+    pop edx
+    ; EAX = offset to the symbol table entry
+
+    ; EBX = symbol offset (relocation target)
+    mov ebx, [eax + 0x04]
+    add ebx, USER_LOAD_LOCATION
+
+    ; EDI = location of the relocation
+    ; (the memory to be modified)
+    mov edi, [edx + 0x00]
     add edi, USER_LOAD_LOCATION
 
     ; Perform the actual relocation
     mov eax, [edi]
-    add eax, USER_LOAD_LOCATION
+    add eax, ebx
     mov [edi], eax
 
     dec ecx
@@ -143,6 +192,8 @@ perform_relocations:
     jmp .loop
 .done:
     pop edi
+    pop ebx
+    pop ebp
     ret
 
 load_program:
@@ -175,12 +226,6 @@ load_program:
     mov ax, [esi + 0x2e]
     cmp ax, ELF_SECTION_HEADER_ENTRY_SIZE
     jne bad_elf_format
-
-    push esi
-    call get_section_names_base
-    add esp, 4
-    mov ebx, eax
-    add ebx, esi
 
     ; Find the .text section entry
     push text_section
