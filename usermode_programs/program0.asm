@@ -2,7 +2,10 @@ use32
 
 global _start
 
-start:
+db 'USELESS PADDING TO TEST ENTRY POINTS NOT AT THE START OF THE BINARY', 0
+
+align 16, db 0xff
+
 _start:
     push dword string_to_print
     call puts

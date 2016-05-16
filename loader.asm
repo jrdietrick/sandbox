@@ -24,6 +24,9 @@ align 16, db 0
 text_section: db '.text', 0
 text_relocation_section: db '.rel.text', 0
 symbol_table_section: db '.symtab', 0
+string_table_section: db '.strtab', 0
+
+entry_point_symbol: db '_start', 0
 
 strcmp:
     push ebp
@@ -95,7 +98,7 @@ find_section_header_entry:
     mov cx, [esi + 0x30]
 .loop:
     cmp cx, 0
-    je .done
+    je bad_elf_format ; if we hit zero, not found!
     mov edx, [eax]
     add edx, ebx
 
@@ -115,8 +118,6 @@ find_section_header_entry:
     dec ecx
     add eax, ELF_SECTION_HEADER_ENTRY_SIZE
     jmp .loop
-.done:
-    jmp bad_elf_format
 .found:
     pop ebx
     pop ebp
@@ -136,6 +137,65 @@ get_symbol_table_entry_by_index:
     mov ecx, [esp + 0x04]
     shl ecx, ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG
     add eax, ecx
+    ret
+
+get_symbol_table_entry_by_string:
+    ; ESI must be the base of the full ELF
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    ; EBX = location of the string table
+    push string_table_section
+    call find_section_header_entry
+    add esp, 4
+    mov ebx, [eax + 0x10]
+    add ebx, esi
+
+    push symbol_table_section
+    call find_section_header_entry
+    add esp, 4
+
+    ; ECX = number of entries in symbol table
+    mov ecx, [eax + 0x14]
+    shr ecx, ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG
+
+    ; EDX = base of the symbol table
+    mov edx, [eax + 0x10]
+    add edx, esi
+
+.loop:
+    cmp ecx, 0
+    je bad_elf_format ; if we hit zero, not found!
+
+    ; strcmp will clobber ECX and EDX
+    push ecx
+    push edx
+
+    ; Calculate the address of the string in
+    ; the string table
+    mov eax, [edx + 0x00] ; offset
+    add eax, ebx
+    push eax
+    ; Compare with the string passed to this
+    ; function as a parameter
+    mov eax, [ebp + 0x08]
+    push eax
+    call strcmp
+    add esp, 8
+    pop edx
+    pop ecx
+
+    cmp eax, 0
+    je .found
+
+    add edx, ELF_SYMBOL_TABLE_ENTRY_SIZE
+    dec ecx
+    jmp .loop
+.found:
+    mov eax, edx
+    pop ebx
+    pop ebp
     ret
 
 perform_relocations:
@@ -257,13 +317,20 @@ load_program:
 
     call perform_relocations
 
+    ; Calculate the entry point
+    push entry_point_symbol
+    call get_symbol_table_entry_by_string
+    add esp, 4
+    mov eax, [eax + 0x04]
+    add eax, USER_LOAD_LOCATION
+
     cli
     push dword USER_DATA_SEGMENT
     push dword USER_STACK_LOCATION
     pushfd
     or dword [esp], 0x200 ; re-enable interrupts when we reach usermode
     push dword USER_CODE_SEGMENT
-    push dword USER_LOAD_LOCATION
+    push dword eax
     mov ax, USER_DATA_SEGMENT
     mov ds, ax
     iret
