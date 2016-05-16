@@ -16,7 +16,8 @@ align 16, db 0
 %define ELF_SECTION_HEADER_TYPE_PROGBITS 0x00000001
 %define ELF_SECTION_HEADER_TYPE_STRTAB 0x00000003
 %define ELF_RELOCATION_ENTRY_SIZE 8
-%define ELF_RELOCATION_ENTRY_SIZE_DIVISOR 3 ; relocation entries are 8 bytes each
+%define ELF_RELOCATION_ENTRY_SIZE_LOG 3 ; relocation entries are 8 bytes each
+%define ELF_RELOCATION_TYPE_R_386_32 0x01
 
 text_section: db '.text', 0
 text_relocation_section: db '.rel.text', 0
@@ -108,7 +109,6 @@ find_section_header_entry:
     ret
 
 perform_relocations:
-    push esi
     push edi
 
     push text_relocation_section
@@ -118,28 +118,31 @@ perform_relocations:
     ; From the size of the relocation section, find
     ; out how many relocation entries there are
     mov ecx, [eax + 0x14]
-    shr ecx, ELF_RELOCATION_ENTRY_SIZE_DIVISOR
+    shr ecx, ELF_RELOCATION_ENTRY_SIZE_LOG
 
     mov edx, [eax + 0x10]
-    add esi, edx
+    add edx, esi
 
 .loop:
     cmp ecx, 0
     je .done
-    mov eax, [esi + 0x04]
-    cmp eax, 0x00000101
+    mov eax, [edx + 0x04]
+    cmp al, ELF_RELOCATION_TYPE_R_386_32
     jne bad_elf_format
-    mov edi, [esi]
+    shr eax, 8
+    mov edi, [edx]
     add edi, USER_LOAD_LOCATION
+
+    ; Perform the actual relocation
     mov eax, [edi]
     add eax, USER_LOAD_LOCATION
     mov [edi], eax
+
     dec ecx
-    add esi, ELF_RELOCATION_ENTRY_SIZE
+    add edx, ELF_RELOCATION_ENTRY_SIZE
     jmp .loop
 .done:
     pop edi
-    pop esi
     ret
 
 load_program:
