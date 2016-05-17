@@ -120,6 +120,8 @@ setup_idt:
     add esp, 4
 
     call print_ascii_table
+    mov al, 0x0a ; '\n'
+    call putc
 
     push dword 1
     call load_program
