@@ -20,6 +20,7 @@ align 16, db 0
 %define ELF_SYMBOL_TABLE_ENTRY_SIZE 16
 %define ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG 4 ; symbol table entries are 16 bytes each
 %define ELF_RELOCATION_TYPE_R_386_32 0x01
+%define ELF_RELOCATION_TYPE_R_386_PC32 0x02
 
 text_section: db '.text', 0
 text_relocation_section: db '.rel.text', 0
@@ -220,9 +221,9 @@ perform_relocations:
 .loop:
     cmp ecx, 0
     je .done
+    ; We'll actually check the relocation type
+    ; a little further down...
     mov eax, [edx + 0x04]
-    cmp al, ELF_RELOCATION_TYPE_R_386_32
-    jne bad_elf_format
     shr eax, 8
 
     ; Get the symbol table entry by index
@@ -236,19 +237,42 @@ perform_relocations:
     ; EAX = offset to the symbol table entry
 
     ; EBX = symbol offset (relocation target)
-    mov ebx, [eax + 0x04]
-    add ebx, USER_LOAD_LOCATION
+    mov ebx, USER_LOAD_LOCATION
+    add ebx, [eax + 0x04]
 
     ; EDI = location of the relocation
     ; (the memory to be modified)
     mov edi, [edx + 0x00]
     add edi, USER_LOAD_LOCATION
 
-    ; Perform the actual relocation
+    ; Perform the actual relocation now.
+    ; Check the type:
+    mov eax, [edx + 0x04]
+    cmp al, ELF_RELOCATION_TYPE_R_386_PC32
+    je .r_386_pc32
+    cmp al, ELF_RELOCATION_TYPE_R_386_32
+    jne bad_elf_format
+
+.r_386_32:
+    ; For R_386_32, we just take the final target
+    ; and add it to whatever is already occupying
+    ; that memory address
     mov eax, [edi]
     add eax, ebx
     mov [edi], eax
+    jmp .relocation_done
+.r_386_pc32:
+    ; For R_386_32, we take the final target MINUS
+    ; the location in memory we're adjusting (to
+    ; construct an EIP-relative call) and then
+    ; adjust it by whatever is already occupying
+    ; that memory address
+    mov eax, ebx
+    sub eax, edi
+    add eax, [edi]
+    mov [edi], eax
 
+.relocation_done:
     dec ecx
     add edx, ELF_RELOCATION_ENTRY_SIZE
     jmp .loop
