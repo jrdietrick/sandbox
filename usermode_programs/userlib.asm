@@ -4,6 +4,8 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
+global _exit
+
 strlen:
     xor eax, eax
     mov edx, [esp + 0x04] ; pointer to buffer

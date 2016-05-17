@@ -121,7 +121,7 @@ setup_idt:
 
     call print_ascii_table
 
-    push dword 0
+    push dword 1
     call load_program
     add esp, 4
 
