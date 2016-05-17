@@ -233,5 +233,6 @@ align 16, db 0
 string_ok: db 'OK', 0
 string_system_call: db 'SYSTEM CALL', 0
 string_pic_interrupt: db 'INTERRUPT', 0
+string_system_call_halt: db 'USERMODE PROGRAM EXITED', 0
 
 align 16, db 0

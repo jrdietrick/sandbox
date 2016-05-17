@@ -15,10 +15,8 @@ _start:
     call puts
     add esp, 4
 
-    int 0xd
-
-spin:
-    jmp spin
+    push dword 42
+    call _exit
 
 string_to_print: db 'this is a string from userspace!', 0x0a, 0x0a, 0
 

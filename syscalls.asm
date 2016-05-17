@@ -12,10 +12,9 @@ system_call_handler:
     push ebx
     push eax
 
-    mov esi, string_system_call
-    call println
+    cmp eax, 1 ; exit
+    je system_call_exit
 
-    mov eax, [ebp - 0x10] ; function code
     cmp eax, 4 ; write
     jne done
 write:
@@ -55,3 +54,14 @@ done:
     mov esp, ebp
     pop ebp
     iret
+
+system_call_exit:
+    ; Just halt the processor, printing the status
+    ; code sent in EBX (the return code)
+    mov esi, string_system_call_halt
+    call println
+    print_register ebx, ebx
+    cli
+.spin:
+    hlt
+    jmp .spin

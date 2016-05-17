@@ -41,3 +41,8 @@ fputs:
 
     pop ebp
     ret
+
+_exit:
+    mov ebx, [esp + 0x04]
+    mov eax, 1 ; exit
+    int 0x80
