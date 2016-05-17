@@ -18,7 +18,7 @@ align 16, db 0
     push register_names.%1
     call print_register_name
     add esp, 4
-    mov eax, [ebp + %2]
+    mov eax, %2
     push eax
     call print_hex_value_32
     add esp, 4
@@ -178,19 +178,6 @@ print_hex_value_8:
     pop ebp
     ret
 
-print_exception_stack:
-    push register_names.eip
-    call print_register_name
-    add esp, 4
-    mov ecx, [esp + 0x04]
-    mov eax, [ecx + 0x04]
-    push eax
-    call print_hex_value_32
-    add esp, 4
-    mov al, 0x0a ; '\n'
-    call putc
-    ret
-
 register_names:
 .eax: db 'EAX', 0
 .ebx: db 'EBX', 0
@@ -209,35 +196,6 @@ print_register_name:
     mov al, 0x3d ; '='
     call putc
     pop esi
-    ret
-
-print_registers:
-    ; We assume we're called right after a pushad,
-    ; so all the registers are on the stack
-    ; TODO: Is that safe? Is `pushad` hardware-
-    ; independent?
-    push ebp
-    mov ebp, esp
-
-    print_register eax, 0x24
-    print_space
-    print_register ebx, 0x18
-    print_space
-    print_register ecx, 0x20
-    print_space
-    print_register edx, 0x1c
-    print_newline
-
-    print_register esi, 0x0c
-    print_space
-    print_register edi, 0x08
-    print_space
-    print_register ebp, 0x10
-    print_space
-    print_register esp, 0x14
-    print_newline
-
-    pop ebp
     ret
 
 cursor_x: dd 0
