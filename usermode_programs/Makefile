@@ -6,7 +6,8 @@ CC = gcc
 AS = nasm
 
 SRCS = program0.asm \
-	   program1.c
+	   program1.c \
+	   merge_two_sorted_arrays_in_place.c
 
 ASM_ELFS = $(patsubst %.asm,%.o,$(filter %.asm,$(SRCS)))
 ASM_BINS = $(patsubst %.asm,%.bin,$(filter %.asm,$(SRCS)))
