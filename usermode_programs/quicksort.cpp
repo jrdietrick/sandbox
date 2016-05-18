@@ -32,7 +32,8 @@ void quicksort (
     int length
     )
 {
-    int cursorIndex = 0;
+    int currentIndex;
+    int nextFreeIndex;
     int pivotIndex;
     int pivotValue;
 
@@ -48,24 +49,24 @@ void quicksort (
     swap(&arr[pivotIndex], &arr[length - 1]);
     pivotIndex = length - 1;
 
-    while (cursorIndex < pivotIndex) {
-        if (arr[cursorIndex] < pivotValue) {
-            cursorIndex++;
+    for (currentIndex = 0, nextFreeIndex = 0;
+         currentIndex < pivotIndex;
+         currentIndex++) {
+
+        if (arr[currentIndex] > pivotValue) {
             continue;
         }
 
-        // Swap with the element left of the pivot, then
-        // with the pivot itself. In the case where we're
-        // the element next to the pivot, the first is a
-        // no-op
-        swap(&arr[cursorIndex], &arr[pivotIndex - 1]);
-        swap(&arr[pivotIndex - 1], &arr[pivotIndex]);
-        pivotIndex--;
+        swap(&arr[currentIndex], &arr[nextFreeIndex]);
+        nextFreeIndex++;
     }
 
-    // Now everything less than the pivot is left of
-    // the pivot, and everything greater than it is
-    // right. Recurse.
+    swap(&arr[nextFreeIndex], &arr[pivotIndex]);
+    pivotIndex = nextFreeIndex;
+
+    // Now everything less than or equal to the
+    // pivot is left of the pivot, and everything
+    // greater than it is right. Recurse.
     quicksort(&arr[0], pivotIndex);
     quicksort(&arr[pivotIndex + 1], length - pivotIndex - 1);
 }
