@@ -62,6 +62,18 @@ void heapify (
 }
 
 
+void sort (
+    int *arr,
+    int length
+    )
+{
+    for (int cursor = length - 1; cursor > 0; cursor--) {
+        swap(&arr[0], &arr[cursor]);
+        siftDown(arr, 0, cursor);
+    }
+}
+
+
 extern "C" void _start (
     )
 {
@@ -69,6 +81,7 @@ extern "C" void _start (
     int length = sizeof(arr) / sizeof(int);
 
     heapify(arr, length);
+    sort(arr, length);
 
     _exit(0);
 }
