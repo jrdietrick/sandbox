@@ -11,6 +11,8 @@ SRCS = heapsort.cpp \
 	   program1.c \
 	   merge_two_sorted_arrays_in_place.cpp
 
+ELFS_IN_SRCS_ORDER = $(patsubst %.asm,%.o,$(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SRCS))))
+
 ASM_ELFS = $(patsubst %.asm,%.o,$(filter %.asm,$(SRCS)))
 ASM_BINS = $(patsubst %.asm,%.bin,$(filter %.asm,$(SRCS)))
 
@@ -20,10 +22,10 @@ C_BINS = $(patsubst %.c,%.bin,$(filter %.c,$(SRCS)))
 CXX_ELFS = $(patsubst %.cpp,%.o,$(filter %.cpp,$(SRCS)))
 CXX_BINS = $(patsubst %.cpp,%.bin,$(filter %.cpp,$(SRCS)))
 
-all: fs_image $(ASM_ELFS) $(ASM_BINS) $(C_ELFS) $(C_BINS) $(CXX_ELFS) $(CXX_BINS)
+all: fs_image $(ASM_BINS) $(C_BINS) $(CXX_BINS)
 
-fs_image: $(ASM_ELFS) $(C_ELFS) $(CXX_ELFS)
-	bash assemble_fs_image.sh $@ $(ASM_ELFS) $(C_ELFS) $(CXX_ELFS)
+fs_image: $(ELFS_IN_SRCS_ORDER)
+	bash assemble_fs_image.sh $@ $(ELFS_IN_SRCS_ORDER)
 
 %.o: %.bin
 	cp $< $@

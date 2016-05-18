@@ -123,7 +123,7 @@ setup_idt:
     mov al, 0x0a ; '\n'
     call putc
 
-    push dword 2
+    push dword 0
     call load_program
     add esp, 4
 
