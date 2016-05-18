@@ -20,32 +20,31 @@ void siftDown (
     int length
     )
 {
-    int leftChildIndex = index * 2 + 1;
-    int rightChildIndex = index * 2 + 2;
-    int indexOfMax = index;
+    while (index < length) {
+        int leftChildIndex = index * 2 + 1;
+        int rightChildIndex = index * 2 + 2;
+        int indexOfMax = index;
 
-    if (leftChildIndex >= length) {
-        // This is a leaf node! Nothing to do.
-        return;
+        if (leftChildIndex >= length) {
+            break;
+        }
+
+        if (arr[leftChildIndex] > arr[indexOfMax]) {
+            indexOfMax = leftChildIndex;
+        }
+
+        if (rightChildIndex < length &&
+            arr[rightChildIndex] > arr[indexOfMax]) {
+            indexOfMax = rightChildIndex;
+        }
+
+        if (indexOfMax == index) {
+            break;
+        }
+
+        swap(&arr[index], &arr[indexOfMax]);
+        index = indexOfMax;
     }
-
-    if (arr[leftChildIndex] > arr[indexOfMax]) {
-        indexOfMax = leftChildIndex;
-    }
-
-    if (rightChildIndex < length &&
-        arr[rightChildIndex] > arr[indexOfMax]) {
-        indexOfMax = rightChildIndex;
-    }
-
-    if (indexOfMax == index) {
-        // Nothing to do.
-        return;
-    }
-
-    swap(&arr[indexOfMax], &arr[index]);
-
-    siftDown(arr, indexOfMax, length);
 }
 
 
