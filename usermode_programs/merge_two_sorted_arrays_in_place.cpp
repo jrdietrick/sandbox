@@ -1,4 +1,6 @@
-#include "userlib.h"
+extern "C" {
+    #include "userlib.h"
+}
 
 
 void merge (
@@ -32,7 +34,7 @@ void merge (
 }
 
 
-void _start (
+extern "C" void _start (
     )
 {
     int arrayA[] = {6, 8, 10};
