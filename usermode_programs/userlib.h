@@ -1,8 +1,13 @@
 #ifndef __USERLIB_H__
 #define __USERLIB_H__
 
-void _exit(
+void _exit (
     int code
+    );
+
+int check_sort (
+    int* array,
+    int length
     );
 
 #endif

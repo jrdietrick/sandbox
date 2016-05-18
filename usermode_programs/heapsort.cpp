@@ -82,5 +82,5 @@ extern "C" void _start (
     heapify(arr, length);
     sort(arr, length);
 
-    _exit(0);
+    _exit(check_sort(arr, length));
 }
