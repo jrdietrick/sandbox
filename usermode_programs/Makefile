@@ -6,7 +6,8 @@ CC = gcc
 CXX = g++
 AS = nasm
 
-SRCS = heapsort.cpp \
+SRCS = quicksort.cpp \
+	   heapsort.cpp \
        program0.asm \
 	   program1.c \
 	   merge_two_sorted_arrays_in_place.cpp
