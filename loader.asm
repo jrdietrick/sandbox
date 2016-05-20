@@ -7,6 +7,35 @@ align 16, db 0
 %define USER_LOAD_LOCATION 0x02000000
 %define USER_STACK_LOCATION 0x02c00000
 
+; Offsets in the file header
+%define ELF_HEADER_OFFSET_MAGIC 0x00
+%define ELF_HEADER_OFFSET_BIT_SIZE 0x04
+%define ELF_HEADER_OFFSET_ENDIANNESS 0x05
+%define ELF_HEADER_OFFSET_VERSION 0x06
+%define ELF_HEADER_OFFSET_ISA 0x12
+%define ELF_HEADER_OFFSET_SECTION_HEADER_ENTRY_SIZE 0x2e
+%define ELF_HEADER_OFFSET_SECTION_HEADER_OFFSET 0x20
+%define ELF_HEADER_OFFSET_SECTION_ENTRIES_COUNT 0x30
+%define ELF_HEADER_OFFSET_SECTION_NAMES_INDEX 0x32
+
+; Offsets in the section header
+%define ELF_SECTION_HEADER_OFFSET_NAME 0x00
+%define ELF_SECTION_HEADER_OFFSET_TYPE 0x04
+%define ELF_SECTION_HEADER_OFFSET_FLAGS 0x08
+%define ELF_SECTION_HEADER_OFFSET_ADDRESS 0x0c
+%define ELF_SECTION_HEADER_OFFSET_OFFSET 0x10
+%define ELF_SECTION_HEADER_OFFSET_SIZE 0x14
+
+; Offsets in relocation entries
+%define ELF_RELOCATION_OFFSET_OFFSET 0x00
+%define ELF_RELOCATION_OFFSET_TYPE 0x04
+
+; Offsets in symbol table entries
+%define ELF_SYMBOL_OFFSET_STRING_OFFSET 0x00
+%define ELF_SYMBOL_OFFSET_OFFSET 0x04
+%define ELF_SYMBOL_OFFSET_TYPE 0x0c
+%define ELF_SYMBOL_OFFSET_INDEX 0x0e
+
 %define ELF_MAGIC 0x464c457f
 %define ELF_32BIT 1
 %define ELF_LITTLE_ENDIAN 1
@@ -19,6 +48,7 @@ align 16, db 0
 %define ELF_RELOCATION_ENTRY_SIZE_LOG 3 ; relocation entries are 8 bytes each
 %define ELF_SYMBOL_TABLE_ENTRY_SIZE 16
 %define ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG 4 ; symbol table entries are 16 bytes each
+%define ELF_SYMBOL_TYPE_SECTION 0x03
 %define ELF_RELOCATION_TYPE_R_386_32 0x01
 %define ELF_RELOCATION_TYPE_R_386_PC32 0x02
 
@@ -127,6 +157,23 @@ find_section_header_entry:
     pop ebp
     ret
 
+get_section_index_by_header_entry_base:
+    ; ESI must be the base of the full ELF
+    push ebp
+    mov ebp, esp
+
+    mov eax, [ebp + 0x08]
+    mov edx, [esi + ELF_HEADER_OFFSET_SECTION_HEADER_OFFSET]
+    add edx, esi
+    sub eax, edx
+    xor edx, edx
+    mov ecx, ELF_SECTION_HEADER_ENTRY_SIZE
+    ; divide EDX:EAX / ECX
+    div ecx
+
+    leave
+    ret
+
 get_symbol_table_entry_by_index:
     ; ESI must be the base of the full ELF
     push symbol_table_section
@@ -141,6 +188,48 @@ get_symbol_table_entry_by_index:
     mov ecx, [esp + 0x04]
     shl ecx, ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG
     add eax, ecx
+    ret
+
+get_symbol_table_entry_by_section_index:
+    push ebp
+    mov ebp, esp
+
+    ; ESI must be the base of the full ELF
+    push symbol_table_section
+    call find_section_header_entry
+    add esp, 4
+
+    ; ECX = number of entries in symbol table
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
+    shr ecx, ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG
+
+    ; EDX = base of the symbol table
+    mov edx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
+    add edx, esi
+
+    ; EAX = index we're looking for
+    mov eax, [ebp + 0x08]
+    ; EAX = type and index we're looking for; type
+    ; is in the low 16 bits, index in the top 16
+    shl eax, 16
+    add eax, ELF_SYMBOL_TYPE_SECTION
+
+.loop:
+    cmp ecx, 0
+    je bad_elf_format ; if we hit zero, not found!
+    push ecx
+
+    mov ecx, [edx + ELF_SYMBOL_OFFSET_TYPE]
+    cmp ecx, eax
+    pop ecx
+    je .found
+
+    add edx, ELF_SYMBOL_TABLE_ENTRY_SIZE
+    dec ecx
+    jmp .loop
+.found:
+    mov eax, edx
+    leave
     ret
 
 get_symbol_table_entry_by_string:
@@ -352,6 +441,11 @@ load_program:
     cmp eax, NULL
     je .no_rodata
 
+    push eax
+    call get_section_index_by_header_entry_base
+    mov ebx, eax
+    pop eax
+
     ; ESI = source location
     mov ecx, [eax + 0x10]
     add esi, ecx
@@ -370,9 +464,23 @@ load_program:
     add edi, 15
     and edi, 0xfffffff0
     mov edx, edi
+    sub edx, USER_LOAD_LOCATION
 
     ; Copy it in!
     rep movsd
+
+    ; Reset ESI, but leave on the stack
+    mov esi, [esp + 0x00]
+
+    ; Now update the symbol table so that relocation
+    ; will link things up as expected!
+    push edx
+    push ebx
+    call get_symbol_table_entry_by_section_index
+    add esp, 4
+    pop edx
+
+    mov [eax + ELF_SYMBOL_OFFSET_OFFSET], edx
 
 .no_rodata:
     pop esi
