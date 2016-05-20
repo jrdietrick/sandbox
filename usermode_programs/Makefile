@@ -26,7 +26,7 @@ CXX_BINS = $(patsubst %.cpp,%.bin,$(filter %.cpp,$(SRCS)))
 
 all: fs_image $(ASM_BINS) $(C_BINS) $(CXX_BINS)
 
-fs_image: $(ELFS_IN_SRCS_ORDER)
+fs_image: $(ELFS_IN_SRCS_ORDER) Makefile
 	bash assemble_fs_image.sh $@ $(ELFS_IN_SRCS_ORDER)
 
 %.o: %.bin
