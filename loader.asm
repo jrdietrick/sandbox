@@ -95,8 +95,8 @@ strcmp:
 
 get_section_names_base:
     mov edx, [esp + 0x04]
-    mov eax, [edx + 0x20]
-    mov cx, [edx + 0x32] ; index of the section names section
+    mov eax, [edx + ELF_HEADER_OFFSET_SECTION_HEADER_OFFSET]
+    mov cx, [edx + ELF_HEADER_OFFSET_SECTION_NAMES_INDEX] ; index of the section names section
     add edx, eax
 .loop:
     cmp cx, 0
@@ -106,10 +106,10 @@ get_section_names_base:
     jmp .loop
 .done:
     ; Double check this is the right section
-    mov eax, [edx + 0x04]
+    mov eax, [edx + ELF_SECTION_HEADER_OFFSET_TYPE]
     cmp eax, ELF_SECTION_HEADER_TYPE_STRTAB
     jne bad_elf_format
-    mov eax, [edx + 0x10]
+    mov eax, [edx + ELF_SECTION_HEADER_OFFSET_OFFSET]
     add eax, [esp + 0x04]
     ret
 
@@ -125,9 +125,9 @@ find_section_header_entry:
     mov ebx, eax
     ; EBX = base of the section names string table
 
-    mov eax, [esi + 0x20]
+    mov eax, [esi + ELF_HEADER_OFFSET_SECTION_HEADER_OFFSET]
     add eax, esi
-    mov cx, [esi + 0x30]
+    mov cx, [esi + ELF_HEADER_OFFSET_SECTION_ENTRIES_COUNT]
 .loop:
     cmp cx, 0
     je .not_found ; if we hit zero, not found!
@@ -181,7 +181,7 @@ get_symbol_table_entry_by_index:
     add esp, 4
 
     ; EAX = base of the symbol table
-    mov eax, [eax + 0x10]
+    mov eax, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
     add eax, esi
 
     ; ECX = symbol index
@@ -242,7 +242,7 @@ get_symbol_table_entry_by_string:
     push string_table_section
     call find_section_header_entry
     add esp, 4
-    mov ebx, [eax + 0x10]
+    mov ebx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
     add ebx, esi
 
     push symbol_table_section
@@ -250,11 +250,11 @@ get_symbol_table_entry_by_string:
     add esp, 4
 
     ; ECX = number of entries in symbol table
-    mov ecx, [eax + 0x14]
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
     shr ecx, ELF_SYMBOL_TABLE_ENTRY_SIZE_LOG
 
     ; EDX = base of the symbol table
-    mov edx, [eax + 0x10]
+    mov edx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
     add edx, esi
 
 .loop:
@@ -267,7 +267,7 @@ get_symbol_table_entry_by_string:
 
     ; Calculate the address of the string in
     ; the string table
-    mov eax, [edx + 0x00] ; offset
+    mov eax, [edx + ELF_SYMBOL_OFFSET_STRING_OFFSET]
     add eax, ebx
     push eax
     ; Compare with the string passed to this
@@ -304,10 +304,10 @@ perform_relocations:
 
     ; From the size of the relocation section, find
     ; out how many relocation entries there are
-    mov ecx, [eax + 0x14]
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
     shr ecx, ELF_RELOCATION_ENTRY_SIZE_LOG
 
-    mov edx, [eax + 0x10]
+    mov edx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
     add edx, esi
 
 .loop:
@@ -315,7 +315,7 @@ perform_relocations:
     je .done
     ; We'll actually check the relocation type
     ; a little further down...
-    mov eax, [edx + 0x04]
+    mov eax, [edx + ELF_RELOCATION_OFFSET_TYPE]
     shr eax, 8
 
     ; Get the symbol table entry by index
@@ -330,16 +330,16 @@ perform_relocations:
 
     ; EBX = symbol offset (relocation target)
     mov ebx, USER_LOAD_LOCATION
-    add ebx, [eax + 0x04]
+    add ebx, [eax + ELF_SYMBOL_OFFSET_OFFSET]
 
     ; EDI = location of the relocation
     ; (the memory to be modified)
-    mov edi, [edx + 0x00]
+    mov edi, [edx + ELF_RELOCATION_OFFSET_OFFSET]
     add edi, USER_LOAD_LOCATION
 
     ; Perform the actual relocation now.
     ; Check the type:
-    mov eax, [edx + 0x04]
+    mov eax, [edx + ELF_RELOCATION_OFFSET_TYPE]
     cmp al, ELF_RELOCATION_TYPE_R_386_PC32
     je .r_386_pc32
     cmp al, ELF_RELOCATION_TYPE_R_386_32
@@ -384,24 +384,24 @@ load_program:
     lea esi, [ecx + 0xc000]
 
     ; Check the ELF header
-    mov eax, [esi]
+    mov eax, [esi + ELF_HEADER_OFFSET_MAGIC]
     cmp eax, ELF_MAGIC
     jne bad_elf_format
-    mov al, [esi + 0x04]
+    mov al, [esi + ELF_HEADER_OFFSET_BIT_SIZE]
     cmp al, ELF_32BIT
     jne bad_elf_format
-    mov al, [esi + 0x05]
+    mov al, [esi + ELF_HEADER_OFFSET_ENDIANNESS]
     cmp al, ELF_LITTLE_ENDIAN
     jne bad_elf_format
-    mov al, [esi + 0x06]
+    mov al, [esi + ELF_HEADER_OFFSET_VERSION]
     cmp al, ELF_VERSION
     jne bad_elf_format
-    mov ax, [esi + 0x12]
+    mov ax, [esi + ELF_HEADER_OFFSET_ISA]
     cmp ax, ELF_X86
     jne bad_elf_format
     ; Make sure section header entries are 40 bytes
     ; in size
-    mov ax, [esi + 0x2e]
+    mov ax, [esi + ELF_HEADER_OFFSET_SECTION_HEADER_ENTRY_SIZE]
     cmp ax, ELF_SECTION_HEADER_ENTRY_SIZE
     jne bad_elf_format
 
@@ -411,18 +411,18 @@ load_program:
     add esp, 4
 
     ; Make sure it's a progbits section
-    mov ecx, [eax + 0x04]
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_TYPE]
     cmp ecx, ELF_SECTION_HEADER_TYPE_PROGBITS
     jne bad_elf_format
 
     push esi
 
     ; Get the source location using the offset
-    mov ecx, [eax + 0x10]
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
     add esi, ecx
 
     ; Get the number of bytes
-    mov ecx, [eax + 0x14]
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
     add ecx, 3
     shr ecx, 2 ; convert to dwords
 
@@ -447,11 +447,11 @@ load_program:
     pop eax
 
     ; ESI = source location
-    mov ecx, [eax + 0x10]
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
     add esi, ecx
 
     ; ECX = number of bytes
-    mov ecx, [eax + 0x14]
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
     cmp ecx, 0
     je .no_rodata
     ; ECX = number of dwords
@@ -490,7 +490,7 @@ load_program:
     push entry_point_symbol
     call get_symbol_table_entry_by_string
     add esp, 4
-    mov eax, [eax + 0x04]
+    mov eax, [eax + ELF_SYMBOL_OFFSET_OFFSET]
     add eax, USER_LOAD_LOCATION
 
     cli
