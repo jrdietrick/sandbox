@@ -26,6 +26,7 @@ text_section: db '.text', 0
 text_relocation_section: db '.rel.text', 0
 symbol_table_section: db '.symtab', 0
 string_table_section: db '.strtab', 0
+read_only_data_section: db '.rodata', 0
 
 entry_point_symbol: db '_start', 0
 
@@ -99,7 +100,7 @@ find_section_header_entry:
     mov cx, [esi + 0x30]
 .loop:
     cmp cx, 0
-    je bad_elf_format ; if we hit zero, not found!
+    je .not_found ; if we hit zero, not found!
     mov edx, [eax]
     add edx, ebx
 
@@ -119,6 +120,8 @@ find_section_header_entry:
     dec ecx
     add eax, ELF_SECTION_HEADER_ENTRY_SIZE
     jmp .loop
+.not_found:
+    mov eax, NULL
 .found:
     pop ebx
     pop ebp
@@ -334,11 +337,45 @@ load_program:
     add ecx, 3
     shr ecx, 2 ; convert to dwords
 
-    mov edi, USER_LOAD_LOCATION ; load program at 32MB
+    ; Load .data at 32MB (0x2000000)
+    mov edi, USER_LOAD_LOCATION
     rep movsd
 
-    pop esi
+    ; Reset ESI, but leave on the stack
+    mov esi, [esp + 0x00]
 
+    ; Find the .rodata section entry
+    push read_only_data_section
+    call find_section_header_entry
+    add esp, 4
+
+    cmp eax, NULL
+    je .no_rodata
+
+    ; ESI = source location
+    mov ecx, [eax + 0x10]
+    add esi, ecx
+
+    ; ECX = number of bytes
+    mov ecx, [eax + 0x14]
+    cmp ecx, 0
+    je .no_rodata
+    ; ECX = number of dwords
+    add ecx, 3
+    shr ecx, 2
+
+    ; EDI is sitting at where we left it after
+    ; copying .text. Align to 16 bytes and copy it
+    ; to EDX for later use, too.
+    add edi, 15
+    and edi, 0xfffffff0
+    mov edx, edi
+
+    ; Copy it in!
+    rep movsd
+
+.no_rodata:
+    pop esi
     call perform_relocations
 
     ; Calculate the entry point

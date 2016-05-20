@@ -1,3 +1,5 @@
+%define NULL 0x00000000
+
 %define FLAG(x) (1 << x)
 %define DISABLE_FLAG(x) (~x)
 
