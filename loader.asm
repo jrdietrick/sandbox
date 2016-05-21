@@ -374,6 +374,73 @@ perform_relocations:
     pop ebp
     ret
 
+load_section:
+    push ebp
+    mov ebp, esp
+    push edi
+    push ebx
+
+    mov esi, [ebp + 0x08]
+
+    ; Find the section header entry
+    push dword [ebp + 0x0c]
+    call find_section_header_entry
+    add esp, 4
+
+    cmp eax, NULL
+    je .section_not_exist
+
+    push eax
+    call get_section_index_by_header_entry_base
+    mov ebx, eax
+    pop eax
+
+    ; ESI = source location
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
+    add esi, ecx
+
+    ; ECX = number of bytes
+    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
+    cmp ecx, 0
+    je .section_not_exist
+    ; ECX = number of dwords
+    add ecx, 3
+    shr ecx, 2
+
+    ; Check against the limit passed on the stack
+    ;mov edx, [ebp + 0x14]
+    ;shr edx, 2
+    ;cmp ecx, edx
+    ;jg bad_elf_format
+
+    ; Where to load is passed on the stack; stash it
+    ; in EDX so we can use it later
+    mov edi, [ebp + 0x10]
+    mov edx, edi
+    sub edx, USER_LOAD_LOCATION
+
+    ; Copy it in!
+    rep movsd
+
+    ; Reset ESI
+    mov esi, [ebp + 0x08]
+
+    ; Now update the symbol table so that relocation
+    ; will link things up as expected!
+    push edx
+    push ebx
+    call get_symbol_table_entry_by_section_index
+    add esp, 4
+    pop edx
+
+    mov [eax + ELF_SYMBOL_OFFSET_OFFSET], edx
+
+.section_not_exist:
+    pop ebx
+    pop edi
+    leave
+    ret
+
 load_program:
     ; Calculate the starting address of
     ; the program we're loading on our
@@ -430,60 +497,24 @@ load_program:
     mov edi, USER_LOAD_LOCATION
     rep movsd
 
-    ; Reset ESI, but leave on the stack
-    mov esi, [esp + 0x00]
+    pop esi
 
-    ; Find the .rodata section entry
-    push read_only_data_section
-    call find_section_header_entry
-    add esp, 4
-
-    cmp eax, NULL
-    je .no_rodata
-
-    push eax
-    call get_section_index_by_header_entry_base
-    mov ebx, eax
-    pop eax
-
-    ; ESI = source location
-    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
-    add esi, ecx
-
-    ; ECX = number of bytes
-    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
-    cmp ecx, 0
-    je .no_rodata
-    ; ECX = number of dwords
-    add ecx, 3
-    shr ecx, 2
-
-    ; EDI is sitting at where we left it after
-    ; copying .text. Align to 16 bytes and copy it
-    ; to EDX for later use, too.
+    ; EDI is sitting where we left it after copying
+    ; .text. Align to 16 bytes, and this is where we
+    ; will start copying the next section.
     add edi, 15
     and edi, 0xfffffff0
-    mov edx, edi
-    sub edx, USER_LOAD_LOCATION
 
-    ; Copy it in!
-    rep movsd
-
-    ; Reset ESI, but leave on the stack
-    mov esi, [esp + 0x00]
-
-    ; Now update the symbol table so that relocation
-    ; will link things up as expected!
-    push edx
-    push ebx
-    call get_symbol_table_entry_by_section_index
-    add esp, 4
-    pop edx
-
-    mov [eax + ELF_SYMBOL_OFFSET_OFFSET], edx
-
-.no_rodata:
+    push dword 0
+    push edi
+    push read_only_data_section
+    push esi
+    call load_section
     pop esi
+    add esp, 4
+    pop edi
+    add esp, 4
+
     call perform_relocations
 
     ; Calculate the entry point
