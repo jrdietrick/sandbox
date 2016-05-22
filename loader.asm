@@ -4,8 +4,10 @@ db 'loader.asm', 0
 
 align 16, db 0
 
-%define USER_LOAD_LOCATION 0x02000000
-%define USER_STACK_LOCATION 0x02c00000
+%define USER_CODE_PAGE_START 0x02000000
+%define USER_CODE_PAGE_END 0x02400000
+%define USER_DATA_PAGE_START 0x02800000
+%define USER_DATA_PAGE_END 0x02c00000
 
 ; Offsets in the file header
 %define ELF_HEADER_OFFSET_MAGIC 0x00
@@ -329,13 +331,13 @@ perform_relocations:
     ; EAX = offset to the symbol table entry
 
     ; EBX = symbol offset (relocation target)
-    mov ebx, USER_LOAD_LOCATION
+    mov ebx, USER_CODE_PAGE_START
     add ebx, [eax + ELF_SYMBOL_OFFSET_OFFSET]
 
     ; EDI = location of the relocation
     ; (the memory to be modified)
     mov edi, [edx + ELF_RELOCATION_OFFSET_OFFSET]
-    add edi, USER_LOAD_LOCATION
+    add edi, USER_CODE_PAGE_START
 
     ; Perform the actual relocation now.
     ; Check the type:
@@ -403,21 +405,20 @@ load_section:
     mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
     cmp ecx, 0
     je .section_not_exist
+    ; Check against the limit passed on the stack
+    mov edx, [ebp + 0x14]
+    cmp ecx, edx
+    jg bad_elf_format
+
     ; ECX = number of dwords
     add ecx, 3
     shr ecx, 2
-
-    ; Check against the limit passed on the stack
-    ;mov edx, [ebp + 0x14]
-    ;shr edx, 2
-    ;cmp ecx, edx
-    ;jg bad_elf_format
 
     ; Where to load is passed on the stack; stash it
     ; in EDX so we can use it later
     mov edi, [ebp + 0x10]
     mov edx, edi
-    sub edx, USER_LOAD_LOCATION
+    sub edx, USER_CODE_PAGE_START
 
     ; Copy it in!
     rep movsd
@@ -494,7 +495,7 @@ load_program:
     shr ecx, 2 ; convert to dwords
 
     ; Load .data at 32MB (0x2000000)
-    mov edi, USER_LOAD_LOCATION
+    mov edi, USER_CODE_PAGE_START
     rep movsd
 
     pop esi
@@ -505,7 +506,12 @@ load_program:
     add edi, 15
     and edi, 0xfffffff0
 
-    push dword 0
+    ; Compute the number of bytes left in the data
+    ; page, as a limit for the load_section function
+    mov eax, USER_DATA_PAGE_END
+    sub eax, edi
+
+    push eax
     push edi
     push read_only_data_section
     push esi
@@ -522,11 +528,11 @@ load_program:
     call get_symbol_table_entry_by_string
     add esp, 4
     mov eax, [eax + ELF_SYMBOL_OFFSET_OFFSET]
-    add eax, USER_LOAD_LOCATION
+    add eax, USER_CODE_PAGE_START
 
     cli
     push dword USER_DATA_SEGMENT
-    push dword USER_STACK_LOCATION
+    push dword USER_DATA_PAGE_END
     pushfd
     or dword [esp], 0x200 ; re-enable interrupts when we reach usermode
     push dword USER_CODE_SEGMENT
