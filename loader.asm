@@ -406,8 +406,10 @@ load_section:
     cmp ecx, 0
     je .section_not_exist
     ; Check against the limit passed on the stack
-    mov edx, [ebp + 0x14]
-    cmp ecx, edx
+    mov edx, [ebp + 0x10]
+    add edx, ecx
+    mov edi, [ebp + 0x14]
+    cmp edx, edi
     jg bad_elf_format
 
     ; ECX = number of dwords
@@ -473,6 +475,7 @@ load_program:
     cmp ax, ELF_SECTION_HEADER_ENTRY_SIZE
     jne bad_elf_format
 
+.load_text: ; Load .text
     ; Find the .text section entry
     push text_section
     call find_section_header_entry
@@ -500,18 +503,14 @@ load_program:
 
     pop esi
 
+.load_rodata: ; Load the .rodata section
     ; EDI is sitting where we left it after copying
     ; .text. Align to 16 bytes, and this is where we
     ; will start copying the next section.
     add edi, 15
     and edi, 0xfffffff0
 
-    ; Compute the number of bytes left in the data
-    ; page, as a limit for the load_section function
-    mov eax, USER_DATA_PAGE_END
-    sub eax, edi
-
-    push eax
+    push USER_CODE_PAGE_END ; far bound on the page
     push edi
     push read_only_data_section
     push esi
