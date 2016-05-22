@@ -8,6 +8,7 @@ align 16, db 0
 %define USER_CODE_PAGE_END 0x02400000
 %define USER_DATA_PAGE_START 0x02800000
 %define USER_DATA_PAGE_END 0x02c00000
+%define USER_STACK_MAXIMUM_SIZE 0x00200000
 
 ; Offsets in the file header
 %define ELF_HEADER_OFFSET_MAGIC 0x00
@@ -59,6 +60,7 @@ text_relocation_section: db '.rel.text', 0
 symbol_table_section: db '.symtab', 0
 string_table_section: db '.strtab', 0
 read_only_data_section: db '.rodata', 0
+data_section: db '.data', 0
 
 entry_point_symbol: db '_start', 0
 
@@ -320,19 +322,35 @@ perform_relocations:
     mov eax, [edx + ELF_RELOCATION_OFFSET_TYPE]
     shr eax, 8
 
-    ; Get the symbol table entry by index
     push edx
     push ecx
+
+    ; Get the symbol table entry by index
     push eax
     call get_symbol_table_entry_by_index
     add esp, 4
-    pop ecx
-    pop edx
     ; EAX = offset to the symbol table entry
 
+    ; The offset in the symbol table is relative to
+    ; the beginning of a given section. So perform a
+    ; second lookup to get the load location of that
+    ; section.
+    push eax
+    xor ebx, ebx
+    mov bx, [eax + ELF_SYMBOL_OFFSET_INDEX]
+    push ebx
+    call get_symbol_table_entry_by_section_index
+    add esp, 4
+    mov ebx, eax
+    pop eax
+
+    pop ecx
+    pop edx
+
     ; EBX = symbol offset (relocation target)
-    mov ebx, USER_CODE_PAGE_START
+    mov ebx, [ebx + ELF_SYMBOL_OFFSET_OFFSET]
     add ebx, [eax + ELF_SYMBOL_OFFSET_OFFSET]
+    add ebx, USER_CODE_PAGE_START
 
     ; EDI = location of the relocation
     ; (the memory to be modified)
@@ -476,32 +494,13 @@ load_program:
     jne bad_elf_format
 
 .load_text: ; Load .text
-    ; Find the .text section entry
+    push USER_DATA_PAGE_END
+    push USER_CODE_PAGE_START
     push text_section
-    call find_section_header_entry
-    add esp, 4
-
-    ; Make sure it's a progbits section
-    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_TYPE]
-    cmp ecx, ELF_SECTION_HEADER_TYPE_PROGBITS
-    jne bad_elf_format
-
     push esi
-
-    ; Get the source location using the offset
-    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_OFFSET]
-    add esi, ecx
-
-    ; Get the number of bytes
-    mov ecx, [eax + ELF_SECTION_HEADER_OFFSET_SIZE]
-    add ecx, 3
-    shr ecx, 2 ; convert to dwords
-
-    ; Load .data at 32MB (0x2000000)
-    mov edi, USER_CODE_PAGE_START
-    rep movsd
-
+    call load_section
     pop esi
+    add esp, 12
 
 .load_rodata: ; Load the .rodata section
     ; EDI is sitting where we left it after copying
@@ -516,9 +515,21 @@ load_program:
     push esi
     call load_section
     pop esi
-    add esp, 4
-    pop edi
-    add esp, 4
+    add esp, 12
+
+.load_data: ; Load the .data section
+    ; Technically .data could use up to 4MB, because
+    ; that's the size of our data page, but we are
+    ; sharing that space with the stack, so we don't
+    ; want to cramp things too much. Allow the stack
+    ; to have 2MB, and the rest can be used for data
+    push USER_DATA_PAGE_END - USER_STACK_MAXIMUM_SIZE
+    push USER_DATA_PAGE_START
+    push data_section
+    push esi
+    call load_section
+    pop esi
+    add esp, 12
 
     call perform_relocations
 
