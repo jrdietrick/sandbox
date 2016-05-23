@@ -61,6 +61,7 @@ symbol_table_section: db '.symtab', 0
 string_table_section: db '.strtab', 0
 read_only_data_section: db '.rodata', 0
 data_section: db '.data', 0
+bss_section: db '.bss', 0
 
 entry_point_symbol: db '_start', 0
 
@@ -440,9 +441,20 @@ load_section:
     mov edx, edi
     sub edx, USER_CODE_PAGE_START
 
+    cmp dword [ebp + 0x0c], bss_section
+    je .zero_section
+.copy_section:
     ; Copy it in!
     rep movsd
-
+    jmp .done
+.zero_section:
+    cmp ecx, 0
+    je .done
+    mov dword [edi], 0
+    add edi, 4
+    dec ecx
+    jmp .zero_section
+.done:
     ; Reset ESI
     mov esi, [ebp + 0x08]
 
@@ -531,6 +543,19 @@ load_program:
     push USER_DATA_PAGE_END - USER_STACK_MAXIMUM_SIZE
     push USER_DATA_PAGE_START
     push data_section
+    push esi
+    call load_section
+    pop esi
+    add esp, 12
+
+.load_bss: ; Load the .bss section
+    ; Align EDX up to the next 16-byte boundary
+    add edx, 15
+    and edx, 0xfffffff0
+
+    push USER_DATA_PAGE_END - USER_STACK_MAXIMUM_SIZE
+    push edx
+    push bss_section
     push esi
     call load_section
     pop esi
