@@ -456,6 +456,11 @@ load_section:
 
     mov [eax + ELF_SYMBOL_OFFSET_OFFSET], edx
 
+    ; Return the destination cursor in EDX in case
+    ; the caller wants to know how far our cursor
+    ; went when we copied
+    mov edx, edi
+
 .section_not_exist:
     pop ebx
     pop edi
@@ -503,14 +508,14 @@ load_program:
     add esp, 12
 
 .load_rodata: ; Load the .rodata section
-    ; EDI is sitting where we left it after copying
+    ; EDX is sitting where we left it after copying
     ; .text. Align to 16 bytes, and this is where we
     ; will start copying the next section.
-    add edi, 15
-    and edi, 0xfffffff0
+    add edx, 15
+    and edx, 0xfffffff0
 
     push USER_CODE_PAGE_END ; far bound on the page
-    push edi
+    push edx
     push read_only_data_section
     push esi
     call load_section
