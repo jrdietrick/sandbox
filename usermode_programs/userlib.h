@@ -10,4 +10,10 @@ int check_sort (
     int length
     );
 
+char* itoa (
+    int value,
+    char* str,
+    int base
+    );
+
 #endif

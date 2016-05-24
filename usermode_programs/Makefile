@@ -6,7 +6,8 @@ CC = gcc
 CXX = g++
 AS = nasm
 
-SRCS = heapsort.cpp \
+SRCS = itoa.c \
+	   heapsort.cpp \
 	   quicksort.cpp \
 	   mergesort.cpp \
 	   program0.asm \
