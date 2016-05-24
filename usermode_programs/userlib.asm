@@ -4,9 +4,8 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit
-global check_sort
-global itoa
+global _exit, check_sort, itoa, puts, strlen
+
 
 assert_false:
     int 0x01

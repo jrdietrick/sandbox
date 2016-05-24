@@ -5,15 +5,23 @@ void _exit (
     int code
     );
 
-int check_sort (
-    int* array,
-    int length
+int strlen (
+    char* str
+    );
+
+void puts (
+    char* str
     );
 
 char* itoa (
     int value,
     char* str,
     int base
+    );
+
+int check_sort (
+    int* array,
+    int length
     );
 
 #endif
