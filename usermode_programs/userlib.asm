@@ -97,6 +97,8 @@ itoa:
     push ebp
     mov ebp, esp
     push edi
+    push ebx
+    mov ebx, esp
 
     ; Radix needs to be 10 (we don't support
     ; anything else at the moment)
@@ -117,7 +119,7 @@ itoa:
     jmp .loop
 .remainder_is_zero:
 .loop2:
-    cmp esp, ebp
+    cmp esp, ebx
     je .done2
     pop edx
     mov byte [edi], dl
@@ -132,6 +134,7 @@ itoa:
 .wrote_something:
     mov byte [edi], 0x00
 
+    pop ebx
     pop edi
     leave
     ret
