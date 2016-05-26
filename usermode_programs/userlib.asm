@@ -4,8 +4,14 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, check_sort, itoa, puts, strcmp, strlen
+global _exit, assert, check_sort, itoa, puts, strcmp, strlen
 
+
+assert:
+    mov eax, [esp + 0x04]
+    cmp eax, 0
+    je assert_false
+    ret
 
 assert_false:
     int 0x01

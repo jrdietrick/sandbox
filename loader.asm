@@ -332,6 +332,9 @@ perform_relocations:
     add esp, 4
     ; EAX = offset to the symbol table entry
 
+    xor ebx, ebx
+    cmp byte [eax + ELF_SYMBOL_OFFSET_TYPE], ELF_SYMBOL_TYPE_SECTION
+    je .symbol_is_section
     ; The offset in the symbol table is relative to
     ; the beginning of a given section. So perform a
     ; second lookup to get the load location of that
@@ -342,14 +345,14 @@ perform_relocations:
     push ebx
     call get_symbol_table_entry_by_section_index
     add esp, 4
-    mov ebx, eax
+    mov ebx, [eax + ELF_SYMBOL_OFFSET_OFFSET]
     pop eax
+.symbol_is_section:
 
     pop ecx
     pop edx
 
     ; EBX = symbol offset (relocation target)
-    mov ebx, [ebx + ELF_SYMBOL_OFFSET_OFFSET]
     add ebx, [eax + ELF_SYMBOL_OFFSET_OFFSET]
     add ebx, USER_CODE_PAGE_START
 

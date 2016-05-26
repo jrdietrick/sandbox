@@ -1,8 +1,16 @@
 #ifndef __USERLIB_H__
 #define __USERLIB_H__
 
+typedef unsigned char boolean;
+#define true 1
+#define false 0
+
 void _exit (
     int code
+    );
+
+void assert (
+    boolean condition
     );
 
 int strlen (
