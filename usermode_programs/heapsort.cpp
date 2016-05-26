@@ -93,5 +93,5 @@ extern "C" void _start (
     heapify(test_array, TEST_ARRAY_SIZE);
     sort(test_array, TEST_ARRAY_SIZE);
 
-    _exit(check_sort(global_arr, length) && check_sort(test_array, TEST_ARRAY_SIZE) ? 1 : -1);
+    _exit(check_sort(global_arr, length) && check_sort(test_array, TEST_ARRAY_SIZE) ? 0 : -1);
 }
