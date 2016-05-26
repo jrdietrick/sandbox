@@ -9,6 +9,11 @@ int strlen (
     char* str
     );
 
+int strcmp (
+    char* a,
+    char* b
+    );
+
 void puts (
     char* str
     );

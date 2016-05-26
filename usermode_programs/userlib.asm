@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, check_sort, itoa, puts, strlen
+global _exit, check_sort, itoa, puts, strcmp, strlen
 
 
 assert_false:
@@ -20,6 +20,39 @@ strlen:
     inc edx
     jmp .loop
 .done:
+    ret
+
+strcmp:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    mov ecx, [ebp + 0x08]
+    mov edx, [ebp + 0x0c]
+
+.loop:
+    mov al, [ecx]
+    mov bl, [edx]
+    cmp al, bl
+    jg .greater
+    jl .less
+    cmp al, 0
+    je .same
+    inc ecx
+    inc edx
+    jmp .loop
+
+.greater:
+    mov eax, 1
+    jmp .cleanup
+.less:
+    mov eax, -1
+    jmp .cleanup
+.same:
+    mov eax, 0
+.cleanup:
+    pop ebx
+    leave
     ret
 
 puts:
