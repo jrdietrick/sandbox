@@ -25,17 +25,8 @@ PROGRAMS_DIR = usermode_programs
 #        | 8 kilobytes maximum (zero-padded if smaller)   |
 #        |                                                |
 #  8704B +------------------------------------------------+
-#        | Usermode program #0 (if exists)                |
-#        | 4 kilobytes                                    |
-# 12800B +------------------------------------------------+
-#        | Usermode program #1 (if exists)                |
-#        | 4 kilobytes                                    |
-# 16896B +------------------------------------------------+
-#        | Usermode program #2 (if exists)                |
-#        | 4 kilobytes                                    |
-# 20992B +------------------------------------------------+
-#        | Usermode program #3 (if exists)                |
-#        | 4 kilobytes                                    |
+#        | Usermode program (if exists)                   |
+#        | 16 kilobytes                                   |
 # 25088B +------------------------------------------------+
 
 disk_image: boot16.bin kernel.o.text fs_image

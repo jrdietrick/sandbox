@@ -483,13 +483,9 @@ load_section:
     ret
 
 load_program:
-    ; Calculate the starting address of
-    ; the program we're loading on our
-    ; "filesystem"
-    mov ecx, [esp + 0x04]
-    ; Programs are 4kB apart on disk
-    shl ecx, 12
-    lea esi, [ecx + 0xc000]
+    ; The program is located at 0xc000
+    ; in our disk image
+    mov esi, 0xc000
 
     ; Check the ELF header
     mov eax, [esi + ELF_HEADER_OFFSET_MAGIC]

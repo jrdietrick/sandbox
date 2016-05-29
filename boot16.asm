@@ -38,7 +38,7 @@ org 0x7c00
     ; Fix the stack
     mov sp, bp
 
-    ; Read up to 4 4096-byte programs
+    ; Read one program, up to 16kB in size,
     ; from the "filesystem" in to 0xc000
     push dword 0x00000000
     push dword 0x00000011

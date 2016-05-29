@@ -34,7 +34,7 @@ fs_image: $(ELFS_IN_SRCS_ORDER) Makefile
 %.o: %.bin
 	cp $< $@
 	strip -d $@
-	test `wc -c < $@` -le 4096 || (echo '$@ exceeds allowable size!'; exit 1)
+	test `wc -c < $@` -le 16384 || (echo '$@ exceeds allowable size!'; exit 1)
 
 $(ASM_BINS):%.bin: %.asm userlib.asm
 	$(AS) $(ASFLAGS) -o $@ $<
