@@ -66,7 +66,9 @@ align 16, db 0
 ; +0x  3c7000  +------------------------------------------------+
 ;              | Bitmask for tier 7                             |
 ; +0x  3c8000  +------------------------------------------------+
-;              | (unused, 224kB)                                |
+;              | General control bits                           |
+; +0x  3c8010  +------------------------------------------------+
+;              | (unused, ~224kB)                               |
 ; +0x  400000  +------------------------------------------------+
 
 %define TIER_COUNT 8
@@ -102,6 +104,9 @@ align 16, db 0
 %define CONTROL_REGION_START 0x003c0000
 %define CONTROL_REGION_BYTES_PER_TIER 4096
 
+%define ALLOCATOR_FLAGS_LOCATION 0x003c8000
+%define ALLOCATOR_INITIALIZED FLAG(0)
+
 %macro CONTROL_REGION_TIER_N_START 1
     CONTROL_REGION_START + (CONTROL_REGION_BYTES_PER_TIER * $1)
 %endmacro
@@ -123,18 +128,13 @@ initialize:
     dec ecx
     jmp .loop
 .done:
-    mov byte [initialized], 0x01
+    or dword [SLAB_BASE + ALLOCATOR_FLAGS_LOCATION], ALLOCATOR_INITIALIZED
     ret
-
-initialized:
-    db 0
-
-align 16, db 0
 
 malloc:
     push ebp
     mov ebp, esp
-    test byte [initialized], 0x01
+    test dword [SLAB_BASE + ALLOCATOR_FLAGS_LOCATION], ALLOCATOR_INITIALIZED
     jnz .already_initialized
     call initialize
 .already_initialized:

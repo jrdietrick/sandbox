@@ -6,6 +6,8 @@ align 16, db 0
 
 global _exit, assert, check_sort, itoa, malloc, puts, strcmp, strlen
 
+%define FLAG(x) (1 << x)
+%define DISABLE_FLAG(x) (~x)
 
 assert:
     mov eax, [esp + 0x04]
