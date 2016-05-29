@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, assert, check_sort, itoa, malloc, puts, strcmp, strlen
+global _exit, assert, check_sort, itoa, malloc, puts, strcmp, strlen, strcpy
 
 %define FLAG(x) (1 << x)
 %define DISABLE_FLAG(x) (~x)
@@ -28,6 +28,27 @@ strlen:
     inc edx
     jmp .loop
 .done:
+    ret
+
+strcpy:
+    push ebp
+    mov ebp, esp
+    push edi
+    push esi
+
+    mov edi, [ebp + 0x08]
+    mov esi, [ebp + 0x0c]
+.loop:
+    cmp byte [esi], 0x00
+    je .copy_null_terminator
+    movsb
+    jmp .loop
+.copy_null_terminator:
+    movsb
+
+    pop esi
+    pop edi
+    leave
     ret
 
 strcmp:

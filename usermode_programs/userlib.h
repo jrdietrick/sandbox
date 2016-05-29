@@ -23,6 +23,11 @@ int strcmp (
     char* b
     );
 
+void strcpy (
+    char* a,
+    char* b
+    );
+
 void puts (
     char* str
     );
