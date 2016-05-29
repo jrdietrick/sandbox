@@ -134,6 +134,8 @@ initialize:
 malloc:
     push ebp
     mov ebp, esp
+    push ebx
+
     test dword [SLAB_BASE + ALLOCATOR_FLAGS_LOCATION], ALLOCATOR_INITIALIZED
     jnz .already_initialized
     call initialize
@@ -145,7 +147,79 @@ malloc:
     jle .tier_0
     call assert_false
 .tier_0:
+    ; Walk through that tier and figure out if there
+    ; is anything available
+    mov edx, SLAB_BASE + CONTROL_REGION_START + (0 * CONTROL_REGION_BYTES_PER_TIER)
+    mov ecx, TIER_0_ALLOCATION_COUNT
+    ; Double-check that we are dealing with a round
+    ; number of dwords here
+    test ecx, 0x1f
+    jz .bitmask_alignment_ok
+    call assert_false
+.bitmask_alignment_ok:
+    ; ECX = number of dwords
+    shr ecx, 5
+
+    ; EAX = counter
+    xor eax, eax
+.dword_loop:
+    cmp eax, ecx
+    je .none_available
+    cmp dword [edx], 0xffffffff
+    jne .found_a_dword_with_room
+    add edx, 4
+    inc eax
+    jmp .dword_loop
+.found_a_dword_with_room:
+    ; EDX points to the dword, and EAX has the
+    ; number of dwords in to the entire block
+    ; we are.
+
+    ; Now EAX = number of bits into the block
+    ; this dword starts
+    shl eax, 5
+
+    ; EBX = bitmask itself
+    mov ebx, [edx]
+    xor ecx, ecx
+.bit_loop:
+    cmp ecx, 32
+    je .none_available ; impossible until we have race conditions
+    test ebx, 0x00000001
+    jz .found
+    shr ebx, 1
+    inc ecx
+    jmp .bit_loop
+.found:
+    ; EAX = number of bits into the region this
+    ; dword is; ECX = number of bits into this
+    ; dword the space is
+    push ecx
+
+    ; First mark the space as allocated now
+    mov ebx, 0x1
+.reconstruct_bit_loop:
+    cmp ecx, 0
+    je .reconstruct_done
+    shl ebx, 1
+    dec ecx
+    jmp .reconstruct_bit_loop
+.reconstruct_done:
+    or [edx], ebx
+
+    pop ecx
+
+    ; Calculate the pointer we'll give back to
+    ; the user
+    add eax, ecx
+    shl eax, TIER_0_ALLOCATION_POWER
+    add eax, SLAB_BASE + TIER_0_ALLOCATION_START
+    jmp .done
+
+.none_available:
     ; Nothing available!
     xor eax, eax
+.done:
+    pop ebx
     leave
     ret
