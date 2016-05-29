@@ -6,7 +6,8 @@ CC = gcc
 CXX = g++
 AS = nasm
 
-SRCS = itoa.c \
+SRCS = malloc_test.c \
+	   itoa.c \
 	   heapsort.cpp \
 	   quicksort.cpp \
 	   mergesort.cpp \
