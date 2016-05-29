@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, assert, check_sort, itoa, puts, strcmp, strlen
+global _exit, assert, check_sort, itoa, malloc, puts, strcmp, strlen
 
 
 assert:
@@ -176,3 +176,5 @@ itoa:
     pop edi
     leave
     ret
+
+%include "allocator.asm"

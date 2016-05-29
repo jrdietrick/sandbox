@@ -48,7 +48,7 @@ $(CXX_BINS):%.bin: %.cpp userlib.h userlib.o
 	$(LD) --relocatable $(LDFLAGS) -o $@ userlib.o $@.tmp
 	rm $@.tmp
 
-userlib.o: userlib.asm
+userlib.o: userlib.asm allocator.asm
 	$(AS) $(ASFLAGS) -o $@ $<
 
 clean:

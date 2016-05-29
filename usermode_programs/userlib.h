@@ -32,6 +32,10 @@ char* itoa (
     int base
     );
 
+void* malloc (
+    unsigned int size
+    );
+
 int check_sort (
     int* array,
     int length
