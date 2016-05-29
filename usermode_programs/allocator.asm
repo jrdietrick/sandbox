@@ -92,14 +92,7 @@ align 16, db 0
 %define TIER_6_ALLOCATION_COUNT (1 << 9)
 %define TIER_7_ALLOCATION_COUNT (1 << 6)
 
-%define TIER_0_ALLOCATION_START 0x00000000
-%define TIER_1_ALLOCATION_START 0x00080000
-%define TIER_2_ALLOCATION_START 0x00100000
-%define TIER_3_ALLOCATION_START 0x00180000
-%define TIER_4_ALLOCATION_START 0x00200000
-%define TIER_5_ALLOCATION_START 0x00280000
-%define TIER_6_ALLOCATION_START 0x00300000
-%define TIER_7_ALLOCATION_START 0x00380000
+%define TIER_ALLOCATION_START_OFFSET_POWER_2 19 ; tiers are 512kB apart
 
 %define CONTROL_REGION_START 0x003c0000
 %define CONTROL_REGION_BYTES_PER_TIER 4096
@@ -107,8 +100,12 @@ align 16, db 0
 %define ALLOCATOR_FLAGS_LOCATION 0x003c8000
 %define ALLOCATOR_INITIALIZED FLAG(0)
 
-%macro CONTROL_REGION_TIER_N_START 1
-    CONTROL_REGION_START + (CONTROL_REGION_BYTES_PER_TIER * $1)
+%macro check_size_against_tier 1
+    mov dword [esp + 0x08], TIER_%1_ALLOCATION_COUNT
+    mov dword [esp + 0x04], TIER_%1_ALLOCATION_POWER
+    mov dword [esp + 0x00], %1
+    cmp ecx, (1 << TIER_%1_ALLOCATION_POWER)
+    jle .tier_located
 %endmacro
 
 initialize:
@@ -131,26 +128,21 @@ initialize:
     or dword [SLAB_BASE + ALLOCATOR_FLAGS_LOCATION], ALLOCATOR_INITIALIZED
     ret
 
-malloc:
+allocate_memory:
     push ebp
     mov ebp, esp
     push ebx
 
-    test dword [SLAB_BASE + ALLOCATOR_FLAGS_LOCATION], ALLOCATOR_INITIALIZED
-    jnz .already_initialized
-    call initialize
-.already_initialized:
-    ; ECX = size of the memory to allocate
-    ; Figure out which tier we need to pull from
-    mov ecx, [ebp + 0x08]
-    cmp ecx, (1 << TIER_0_ALLOCATION_POWER)
-    jle .tier_0
-    call assert_false
-.tier_0:
+    ; Calculate the beginning of that tier's control
+    ; region in EDX
+    mov edx, [ebp + 0x08]
+    imul edx, CONTROL_REGION_BYTES_PER_TIER
+    add edx, SLAB_BASE + CONTROL_REGION_START
+
     ; Walk through that tier and figure out if there
     ; is anything available
-    mov edx, SLAB_BASE + CONTROL_REGION_START + (0 * CONTROL_REGION_BYTES_PER_TIER)
-    mov ecx, TIER_0_ALLOCATION_COUNT
+    ; ECX = number of allocations in this tier
+    mov ecx, [ebp + 0x10]
     ; Double-check that we are dealing with a round
     ; number of dwords here
     test ecx, 0x1f
@@ -212,8 +204,17 @@ malloc:
     ; Calculate the pointer we'll give back to
     ; the user
     add eax, ecx
-    shl eax, TIER_0_ALLOCATION_POWER
-    add eax, SLAB_BASE + TIER_0_ALLOCATION_START
+    mov ebx, [ebp + 0x0c]
+.reconstruct_pointer_loop:
+    cmp ebx, 0
+    je .reconstruct_pointer_done
+    shl eax, 1
+    dec ebx
+    jmp .reconstruct_pointer_loop
+.reconstruct_pointer_done:
+    mov edx, [ebp + 0x08]
+    shl edx, TIER_ALLOCATION_START_OFFSET_POWER_2
+    lea eax, [eax + edx + SLAB_BASE]
     jmp .done
 
 .none_available:
@@ -221,5 +222,43 @@ malloc:
     xor eax, eax
 .done:
     pop ebx
+    leave
+    ret
+
+malloc:
+    push ebp
+    mov ebp, esp
+
+    test dword [SLAB_BASE + ALLOCATOR_FLAGS_LOCATION], ALLOCATOR_INITIALIZED
+    jnz .already_initialized
+    call initialize
+.already_initialized:
+    ; ECX = size of the memory to allocate
+    ; Figure out which tier we need to pull from
+    mov ecx, [ebp + 0x08]
+
+    ; TODO: Find a more efficient way to do this
+    ; next bit!
+    push dword TIER_0_ALLOCATION_COUNT
+    push dword TIER_0_ALLOCATION_POWER
+    push dword 0
+    cmp ecx, (1 << TIER_0_ALLOCATION_POWER)
+    jle .tier_located
+    check_size_against_tier 1
+    check_size_against_tier 2
+    check_size_against_tier 3
+    check_size_against_tier 4
+    check_size_against_tier 5
+    check_size_against_tier 6
+    check_size_against_tier 7
+
+    ; The size of memory asked for is too big!
+    xor eax, eax
+    jmp .done
+.tier_located:
+    call allocate_memory
+.done:
+    add esp, 12
+
     leave
     ret
