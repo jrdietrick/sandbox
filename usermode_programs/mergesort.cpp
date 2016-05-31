@@ -1,6 +1,4 @@
-extern "C" {
-    #include "userlib.h"
-}
+#include "userlib"
 
 
 void merge (
@@ -65,7 +63,6 @@ void sort (
           auxArray);
 }
 
-
 extern "C" void _start (
     )
 {
@@ -73,7 +70,7 @@ extern "C" void _start (
     int* aux_array;
     int length = sizeof(array) / sizeof(int);
 
-    aux_array = (int*)malloc(((sizeof(array) / sizeof(int)) / 2 + 1) * sizeof(int));
+    aux_array = new int[((sizeof(array) / sizeof(int)) / 2 + 1)];
     if (!aux_array) {
         _exit(-1);
     }

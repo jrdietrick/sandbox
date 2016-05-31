@@ -1,0 +1,23 @@
+#ifndef __USERLIB__
+#define __USERLIB__
+
+extern "C" {
+    #include "userlib.h"
+    #include "stddef.h"
+}
+
+void* operator new (
+    size_t size
+    )
+{
+    return malloc(size);
+}
+
+void* operator new[] (
+    size_t size
+    )
+{
+    return malloc(size);
+}
+
+#endif
