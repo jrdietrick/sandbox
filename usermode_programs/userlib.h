@@ -42,6 +42,10 @@ void* malloc (
     unsigned int size
     );
 
+void free (
+    void* freed_region
+    );
+
 int check_sort (
     int* array,
     int length

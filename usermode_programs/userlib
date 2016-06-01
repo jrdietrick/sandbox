@@ -20,4 +20,18 @@ void* operator new[] (
     return malloc(size);
 }
 
+void operator delete (
+    void* freed_region
+    )
+{
+    free(freed_region);
+}
+
+void operator delete[] (
+    void* freed_region
+    )
+{
+    free(freed_region);
+}
+
 #endif

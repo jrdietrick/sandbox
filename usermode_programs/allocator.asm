@@ -262,3 +262,6 @@ malloc:
 
     leave
     ret
+
+free:
+    ret

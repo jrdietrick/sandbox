@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, assert, check_sort, itoa, malloc, puts, strcmp, strlen, strcpy
+global _exit, assert, check_sort, free, itoa, malloc, puts, strcmp, strlen, strcpy
 
 %define FLAG(x) (1 << x)
 %define DISABLE_FLAG(x) (~x)
