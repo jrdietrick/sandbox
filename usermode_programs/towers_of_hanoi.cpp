@@ -1,65 +1,52 @@
 #include "userlib"
+#include "towers_of_hanoi.h"
 
 
-typedef class Disk {
+Disk::Disk (
+    int radius
+    ) : radius_(radius), disk_below_(nullptr)
+{
+}
 
-public:
-    int radius_;
-    Disk* disk_below_;
+Spindle::Spindle (
+    char* name
+    ) : top_(nullptr), name_(name)
+{
+}
 
-    Disk (
-        int radius
-        ) : radius_(radius), disk_below_(nullptr)
-    {
+bool Spindle::empty (
+    )
+{
+    return top_ ? false : true;
+}
+
+Disk* Spindle::pop (
+    )
+{
+    assert(top_ != nullptr);
+    Disk* just_popped = top_;
+    top_ = just_popped->disk_below_;
+    just_popped->disk_below_ = nullptr;
+    return just_popped;
+}
+
+void Spindle::push (
+    Disk* disk
+    )
+{
+    assert(disk->disk_below_ == nullptr);
+    disk->disk_below_ = top_;
+    top_ = disk;
+    if (disk->disk_below_) {
+        assert(disk->radius_ < disk->disk_below_->radius_);
     }
-} Disk;
+}
 
-typedef class Spindle {
-
-    Disk* top_;
-    char* name_;
-
-public:
-    Spindle (
-        char* name
-        ) : top_(nullptr), name_(name)
-    {
-    }
-
-    bool empty (
-        )
-    {
-        return top_ ? false : true;
-    }
-
-    Disk* pop (
-        )
-    {
-        assert(top_ != nullptr);
-        Disk* just_popped = top_;
-        top_ = just_popped->disk_below_;
-        just_popped->disk_below_ = nullptr;
-        return just_popped;
-    }
-
-    void push (
-        Disk* disk
-        )
-    {
-        assert(disk->disk_below_ == nullptr);
-        disk->disk_below_ = top_;
-        top_ = disk;
-        if (disk->disk_below_) {
-            assert(disk->radius_ < disk->disk_below_->radius_);
-        }
-    }
-
-    char* getName (
-        )
-    {
-        return name_;
-    }
-} Spindle;
+char* Spindle::getName (
+    )
+{
+    return name_;
+}
 
 void move (
     Spindle* from,
