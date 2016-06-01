@@ -48,7 +48,7 @@ char* Spindle::getName (
     return name_;
 }
 
-void move (
+int move (
     Spindle* from,
     Spindle* to,
     int disk_count,
@@ -56,33 +56,43 @@ void move (
     )
 {
     Disk* disk_in_hand;
+    int moves = 0;
+    char itoa_buffer[33];
 
     if (disk_count == 1) {
         disk_in_hand = from->pop();
         to->push(disk_in_hand);
-        //printf("Disk of radius %d from %s -> %s\n",
-        //       disk_in_hand->radius_,
-        //       from->getName(),
-        //       to->getName());
-        return;
+        puts("Disk of radius ");
+        itoa(disk_in_hand->radius_, itoa_buffer, 10);
+        puts(itoa_buffer);
+        puts(" from ");
+        puts(from->getName());
+        puts(" -> ");
+        puts(to->getName());
+        puts("\n");
+        return 1;
     }
 
     // For anything above two, move all disks
     // above us, using the destination (to) as
     // swap space...
-    move(from, swap, disk_count - 1, to);
+    moves += move(from, swap, disk_count - 1, to);
 
     // Move us...
-    move(from, to, 1, nullptr);
+    moves += move(from, to, 1, nullptr);
 
     // Now move everything from swap to the
     // destination, using "from" as swap
-    move(swap, to, disk_count - 1, from);
+    moves += move(swap, to, disk_count - 1, from);
+    return moves;
 }
 
 int main (
     )
 {
+    int moves;
+    char itoa_buffer[33];
+
     Disk* disk8 = new Disk(8);
     Disk* disk7 = new Disk(7);
     Disk* disk6 = new Disk(6);
@@ -105,7 +115,12 @@ int main (
     spin0->push(disk2);
     spin0->push(disk1);
 
-    move(spin0, spin1, 5, spin2);
+    moves = move(spin0, spin1, 3, spin2);
+    puts("\n");
+    puts("Total moves: ");
+    itoa(moves, itoa_buffer, 10);
+    puts(itoa_buffer);
+    puts("\n\n");
 
     delete spin2;
     delete spin1;
