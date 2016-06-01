@@ -3,14 +3,15 @@ ASFLAGS += -f elf -g -F dwarf
 LDFLAGS += -melf_i386
 
 CC = gcc
-CXX = g++
+CXX = g++ -std=c++11
 AS = nasm
 
-SRCS = malloc_test.c \
+SRCS = towers_of_hanoi.cpp \
+	   mergesort.cpp \
 	   itoa.c \
 	   heapsort.cpp \
 	   quicksort.cpp \
-	   mergesort.cpp \
+	   malloc_test.c \
 	   program0.asm \
 	   program1.c \
 	   merge_two_sorted_arrays_in_place.cpp
