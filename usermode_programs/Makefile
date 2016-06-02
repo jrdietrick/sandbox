@@ -1,4 +1,4 @@
-CFLAGS  += -m32 -Wall -fno-builtin -fno-stack-protector -nostdlib -g
+CFLAGS  += -m32 -Wall -fno-builtin -fno-stack-protector -fno-exceptions -nostdlib -g
 ASFLAGS += -f elf -g -F dwarf
 LDFLAGS += -melf_i386
 
@@ -6,7 +6,8 @@ CC = gcc
 CXX = g++ -std=c++11
 AS = nasm
 
-SRCS = towers_of_hanoi.cpp \
+SRCS = deque.cpp \
+	   towers_of_hanoi.cpp \
 	   mergesort.cpp \
 	   itoa.c \
 	   heapsort.cpp \

@@ -6,6 +6,9 @@
 
 #define NULL 0
 
+#define INT_MAX ((int)0x7fffffff)
+#define INT_MIN ((int)0x80000000)
+
 void _exit (
     int code
     );
