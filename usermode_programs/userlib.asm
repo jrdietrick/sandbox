@@ -173,7 +173,12 @@ itoa:
     xor edx, edx
     mov ecx, 10
     div ecx
+    push edx
+    ; Keep going, unless both quotient AND carry
+    ; are zero
+    or edx, eax
     cmp edx, 0
+    pop edx
     je .remainder_is_zero
     add edx, '0'
     push edx
