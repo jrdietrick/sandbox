@@ -20,6 +20,11 @@ typedef class Node {
     Node* rebalance (
         );
 
+    Node* rotateLeft (
+        );
+
+    Node* rotateRight (
+        );
 
 public:
     Node (
