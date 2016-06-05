@@ -94,11 +94,62 @@ Node* Node::insert (
     return rebalance();
 }
 
-Node* Node::remove (
-    int value
+Node* Node::extract (
+    int value,
+    Node** extracted
     )
 {
-    assert(false);
+    if (value < value_) {
+        // Go left
+        if (left_) {
+            left_ = left_->extract(value, extracted);
+        } else {
+            *extracted = nullptr;
+        }
+        return rebalance();
+    }
+
+    if (value > value_) {
+        // Go right
+        if (right_) {
+            right_ = right_->extract(value, extracted);
+        } else {
+            *extracted = nullptr;
+        }
+        return rebalance();
+    }
+
+    // We are the node to remove. Swap ourselves
+    // with the in-order predecessor if there is
+    // one, else just return the right subtree
+    if (!left_) {
+        Node* new_root = right_;
+        *extracted = this;
+        left_ = nullptr;
+        right_ = nullptr;
+        updateHeightAndCount();
+        return new_root;
+    }
+
+    // Find the in-order predecessor and swap
+    Node* predecessor;
+    left_ = left_->extractMaximum(&predecessor);
+    predecessor->left_ = left_;
+    predecessor->right_ = right_;
+    predecessor->updateHeightAndCount();
+
+    *extracted = this;
+    left_ = nullptr;
+    right_ = nullptr;
+    updateHeightAndCount();
+
+    return predecessor->rebalance();
+}
+
+int Node::getValue (
+    )
+{
+    return value_;
 }
 
 Node* Node::rotateLeft (
@@ -131,12 +182,36 @@ Node* Node::rotateRight (
     return new_root;
 }
 
+Node* Node::extractMaximum (
+    Node** extracted
+    )
+{
+    if (!right_) {
+        // We are the max; pull ourselves out
+        *extracted = this;
+        return left_;
+    }
+    right_ = right_->extractMaximum(extracted);
+    return rebalance();
+}
+
 int main (
     )
 {
+    char itoa_buffer[33];
+
     Node* root = new Node(0);
-    for (int i = 1; i < 10; i++) {
+    for (int i = 1; i < 100; i++) {
         root = root->insert(new Node(i));
+    }
+    for (int i = 0; i < 50; i++) {
+        Node* extracted;
+        root = root->extract(i, &extracted);
+        itoa(extracted->getValue(), itoa_buffer, 10);
+        puts("extracted ");
+        puts(itoa_buffer);
+        puts("\n");
+        delete extracted;
     }
     return 0;
 }

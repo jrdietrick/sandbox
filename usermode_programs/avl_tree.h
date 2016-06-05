@@ -26,6 +26,10 @@ typedef class Node {
     Node* rotateRight (
         );
 
+    Node* extractMaximum (
+        Node** extracted
+        );
+
 public:
     Node (
         int value
@@ -35,8 +39,12 @@ public:
         Node* node
         );
 
-    Node* remove (
-        int value
+    Node* extract (
+        int value,
+        Node** extracted
+        );
+
+    int getValue (
         );
 
 } Node;
