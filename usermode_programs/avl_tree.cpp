@@ -94,6 +94,27 @@ Node* Node::insert (
     return rebalance();
 }
 
+Node* Node::find (
+    int value
+    )
+{
+    if (value < value_) {
+        if (!left_) {
+            return nullptr;
+        }
+        return left_->find(value);
+    }
+
+    if (value > value_) {
+        if (!right_) {
+            return nullptr;
+        }
+        return right_->find(value);
+    }
+
+    return this;
+}
+
 Node* Node::extract (
     int value,
     Node** extracted
@@ -195,24 +216,101 @@ Node* Node::extractMaximum (
     return rebalance();
 }
 
+void printNodeShortcut (
+    Node* node
+    )
+{
+    char itoa_buffer[33];
+    itoa(node->getValue(), itoa_buffer, 10);
+    puts("visited ");
+    puts(itoa_buffer);
+    puts("\n");
+}
+
+void Node::inOrderTraversal (
+    )
+{
+    if (left_) {
+        left_->inOrderTraversal();
+    }
+    printNodeShortcut(this);
+    if (right_) {
+        right_->inOrderTraversal();
+    }
+}
+
+void Node::preOrderTraversal (
+    )
+{
+    printNodeShortcut(this);
+    if (left_) {
+        left_->preOrderTraversal();
+    }
+    if (right_) {
+        right_->preOrderTraversal();
+    }
+}
+
+void Node::postOrderTraversal (
+    )
+{
+    if (left_) {
+        left_->postOrderTraversal();
+    }
+    if (right_) {
+        right_->postOrderTraversal();
+    }
+    printNodeShortcut(this);
+}
+
 int main (
     )
 {
     char itoa_buffer[33];
 
     Node* root = new Node(0);
-    for (int i = 1; i < 100; i++) {
+    for (int i = 1; i < 10; i++) {
         root = root->insert(new Node(i));
     }
-    for (int i = 0; i < 50; i++) {
+
+    // Nodes 0 through 9 should be found
+    for (int i = 0; i < 10; i++) {
+        assert(root->find(i) != nullptr);
+    }
+
+    // 10 - 19 should not be
+    for (int i = 10; i < 20; i++) {
+        assert(root->find(i) == nullptr);
+    }
+
+    root->inOrderTraversal();
+
+    // Remove 0 through 4
+    for (int i = 0; i < 5; i++) {
         Node* extracted;
         root = root->extract(i, &extracted);
-        itoa(extracted->getValue(), itoa_buffer, 10);
-        puts("extracted ");
-        puts(itoa_buffer);
-        puts("\n");
+        //itoa(extracted->getValue(), itoa_buffer, 10);
+        //puts("extracted ");
+        //puts(itoa_buffer);
+        //puts("\n");
         delete extracted;
     }
+
+    // ... and they should not be found
+    for (int i = 0; i < 5; i++) {
+        assert(root->find(i) == nullptr);
+    }
+
+    // Free the remaining nodes
+    for (int i = 5; i < 10; i++) {
+        Node* extracted;
+        root = root->extract(i, &extracted);
+        delete extracted;
+    }
+
+    // Should be nothing left
+    assert(root == nullptr);
+
     return 0;
 }
 

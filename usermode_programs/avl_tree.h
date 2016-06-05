@@ -39,12 +39,25 @@ public:
         Node* node
         );
 
+    Node* find (
+        int value
+        );
+
     Node* extract (
         int value,
         Node** extracted
         );
 
     int getValue (
+        );
+
+    void inOrderTraversal (
+        );
+
+    void preOrderTraversal (
+        );
+
+    void postOrderTraversal (
         );
 
 } Node;
