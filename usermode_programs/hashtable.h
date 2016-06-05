@@ -12,7 +12,7 @@ typedef class Hashtable {
     } Node;
 
     Node** buckets_;
-    int bucket_count_;
+    int buckets_count_;
 
     int hash (
         char* key
@@ -23,9 +23,19 @@ typedef class Hashtable {
         bool delete_when_found
         );
 
+    void deep_copy_from_buckets (
+        Node** buckets_from,
+        int buckets_from_count
+        );
+
+    static void delete_buckets (
+        Node** buckets,
+        int buckets_count
+        );
+
 public:
     Hashtable (
-        int bucket_count
+        int buckets_count
         );
 
     ~Hashtable (
@@ -56,6 +66,9 @@ public:
         void* value
         );
 
+    void resize (
+        int new_size
+        );
 
 } Hashtable;
 
