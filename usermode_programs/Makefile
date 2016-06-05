@@ -6,7 +6,8 @@ CC = gcc
 CXX = g++ -std=c++11
 AS = nasm
 
-SRCS = deque.cpp \
+SRCS = hashtable.cpp \
+	   deque.cpp \
 	   towers_of_hanoi.cpp \
 	   mergesort.cpp \
 	   itoa.c \
