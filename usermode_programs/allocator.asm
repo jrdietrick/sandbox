@@ -264,4 +264,36 @@ malloc:
     ret
 
 free:
+    push ebp
+    mov ebp, esp
+
+    mov eax, [ebp + 0x08]
+    cmp eax, SLAB_BASE
+    jl .invalid_free
+    cmp eax, SLAB_BASE + CONTROL_REGION_START
+    jge .invalid_free
+
+    cmp eax, SLAB_BASE + (1 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge .not_implemented_free
+
+    ; Memory to free is in tier 0
+    sub eax, SLAB_BASE
+    shr eax, TIER_0_ALLOCATION_POWER
+
+    mov edx, CONTROL_REGION_START + (0 * CONTROL_REGION_BYTES_PER_TIER)
+    mov ecx, eax
+    shr ecx, 5 ; 32 bits per dword
+.find_bitmask_dword_loop:
+    cmp ecx, 0
+    je .find_bitmask_dword_done
+    add edx, 4
+    dec ecx
+    jmp .find_bitmask_dword_loop
+.find_bitmask_dword_done:
+
+.not_implemented_free: ; <-- TODO: implement
+    leave
     ret
+
+.invalid_free:
+    call assert_false
