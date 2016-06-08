@@ -108,6 +108,14 @@ align 16, db 0
     jle .tier_located
 %endmacro
 
+%macro check_tier_for_leaks 1
+    mov dword [esp + 0x04], TIER_%1_ALLOCATION_COUNT
+    mov dword [esp + 0x00], %1
+    call leak_check_tier
+    test eax, eax
+    jnz .leak_found
+%endmacro
+
 initialize:
     ; Zero out all the control areas
     mov edx, SLAB_BASE + CONTROL_REGION_START
@@ -308,3 +316,53 @@ free:
 
 .invalid_free:
     call assert_false
+
+leak_check_tier:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    xor eax, eax
+
+    ; ECX = dwords worth of allocations
+    mov ecx, [ebp + 0x0c]
+    shr ecx, 5
+
+    ; EDX = starting pointer for scan
+    mov edx, [ebp + 0x08]
+    imul edx, CONTROL_REGION_BYTES_PER_TIER
+    add edx, SLAB_BASE + CONTROL_REGION_START
+
+.loop:
+    cmp ecx, 0
+    je .done
+    mov ebx, [edx]
+    add edx, 4
+    dec ecx
+    test ebx, ebx
+    jz .loop
+    mov eax, 1
+.done:
+
+    pop ebx
+    leave
+    ret
+
+leak_check:
+    push ebp
+    mov ebp, esp
+
+    sub esp, 8
+    check_tier_for_leaks 0
+    check_tier_for_leaks 1
+    check_tier_for_leaks 2
+    check_tier_for_leaks 3
+    check_tier_for_leaks 4
+    check_tier_for_leaks 5
+    check_tier_for_leaks 6
+    check_tier_for_leaks 7
+.leak_found
+    add esp, 8
+
+    leave
+    ret

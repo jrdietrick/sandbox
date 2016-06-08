@@ -110,11 +110,6 @@ fputs:
     pop ebp
     ret
 
-_exit:
-    mov ebx, [esp + 0x04]
-    mov eax, 1 ; exit
-    int 0x80
-
 check_sort:
     push ebp
     mov ebp, esp
@@ -206,3 +201,19 @@ itoa:
     ret
 
 %include "allocator.asm"
+
+memory_leak_detected: db 'MEMORY LEAK DETECTED', 0x0a, 0
+
+align 16, db 0
+
+_exit:
+    call leak_check
+    test eax, eax
+    jz .no_leaks
+    push memory_leak_detected
+    call puts
+    add esp, 4
+.no_leaks:
+    mov ebx, [esp + 0x04]
+    mov eax, 1 ; exit
+    int 0x80
