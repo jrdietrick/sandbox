@@ -27,7 +27,7 @@ Quick facts
 * Virtual memory is enabled, to give user-mode programs a separate page for their code and data, and to protect the kernel code from being modified by user-mode programs. User-mode programs get a 4MB stack because we're using large pages.
 * [The loader](loader.asm) reads ELF files, but with a lot of limitations.
 * On boot, after everything is set up, we load one program from our "filesystem", and if it's a valid ELF in our world (which is a tighter definition than the actual ELF spec), start executing it.
-* The loader supports the `.text`, `.data`, `.rodata`, and `.bss` sections, but only to a point -- 4MB cumulative for `.text` and `.rodata`, 2MB cumulative for `.rodata` and `.bss`. And there's no dynamic memory allocation. So you're not going to sort 1,000,000 `int`s on this bad boy. Yet.
+* The loader supports the `.text`, `.data`, `.rodata`, and `.bss` sections, but only to a point -- 4MB cumulative for `.text` and `.rodata`, 2MB cumulative for `.rodata` and `.bss`.
 * The `exit` system call is implemented by halting the processor. Once we run that one user-mode program, we're done!
 
 Resources used
