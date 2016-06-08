@@ -271,25 +271,35 @@ malloc:
     leave
     ret
 
-free:
+free_memory:
     push ebp
     mov ebp, esp
     push ebx
 
-    mov eax, [ebp + 0x08]
-    cmp eax, SLAB_BASE
-    jl .invalid_free
-    cmp eax, SLAB_BASE + CONTROL_REGION_START
-    jge .invalid_free
-
-    cmp eax, SLAB_BASE + (1 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
-    jge .not_implemented_free
-
-    ; Memory to free is in tier 0
+    mov eax, [ebp + 0x10]
     sub eax, SLAB_BASE
-    shr eax, TIER_0_ALLOCATION_POWER
 
-    mov edx, SLAB_BASE + CONTROL_REGION_START + (0 * CONTROL_REGION_BYTES_PER_TIER)
+    mov ecx, [ebp + 0x08]
+    shl ecx, TIER_ALLOCATION_START_OFFSET_POWER_2
+    sub eax, ecx
+
+    ; Shift EAX right by the allocation power
+    ; (loaded into ECX)
+    mov ecx, [ebp + 0x0c]
+.shift_loop:
+    cmp ecx, 0
+    je .shift_done
+    shr eax, 1
+    dec ecx
+    jmp .shift_loop
+.shift_done:
+    ; Now EAX contains the index of the allocation
+    ; in the free list
+
+    ; EDX = start of the free list for this tier
+    mov edx, [ebp + 0x08]
+    imul edx, CONTROL_REGION_BYTES_PER_TIER
+    add edx, SLAB_BASE + CONTROL_REGION_START
 
     ; EDX = address of the dword we're going to
     ; modify
@@ -309,7 +319,77 @@ free:
     ; Flip the bit!
     and [edx], ebx
 
-.not_implemented_free: ; <-- TODO: implement
+    pop ebx
+    leave
+    ret
+
+free:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    mov ebx, [ebp + 0x08]
+    cmp ebx, SLAB_BASE
+    jl .invalid_free
+    cmp ebx, SLAB_BASE + CONTROL_REGION_START
+    jge .invalid_free
+
+    push ebx
+    cmp ebx, SLAB_BASE + (1 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge .not_tier_0
+    push dword TIER_0_ALLOCATION_POWER
+    push dword 0
+    call free_memory
+    jmp .done
+.not_tier_0:
+    cmp ebx, SLAB_BASE + (2 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge .not_tier_1
+    push dword TIER_1_ALLOCATION_POWER
+    push dword 1
+    call free_memory
+    jmp .done
+.not_tier_1:
+    cmp ebx, SLAB_BASE + (3 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge .not_tier_2
+    push dword TIER_2_ALLOCATION_POWER
+    push dword 2
+    call free_memory
+    jmp .done
+.not_tier_2:
+    cmp ebx, SLAB_BASE + (4 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge .not_tier_3
+    push dword TIER_3_ALLOCATION_POWER
+    push dword 3
+    call free_memory
+    jmp .done
+.not_tier_3:
+    cmp ebx, SLAB_BASE + (5 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge .not_tier_4
+    push dword TIER_4_ALLOCATION_POWER
+    push dword 4
+    call free_memory
+    jmp .done
+.not_tier_4:
+    cmp ebx, SLAB_BASE + (6 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge .not_tier_5
+    push dword TIER_5_ALLOCATION_POWER
+    push dword 5
+    call free_memory
+    jmp .done
+.not_tier_5:
+    cmp ebx, SLAB_BASE + (7 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge .not_tier_6
+    push dword TIER_6_ALLOCATION_POWER
+    push dword 6
+    call free_memory
+    jmp .done
+.not_tier_6:
+    push dword TIER_7_ALLOCATION_POWER
+    push dword 7
+    call free_memory
+.done:
+    add esp, 12
+
     pop ebx
     leave
     ret
