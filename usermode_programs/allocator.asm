@@ -266,6 +266,7 @@ malloc:
 free:
     push ebp
     mov ebp, esp
+    push ebx
 
     mov eax, [ebp + 0x08]
     cmp eax, SLAB_BASE
@@ -280,18 +281,28 @@ free:
     sub eax, SLAB_BASE
     shr eax, TIER_0_ALLOCATION_POWER
 
-    mov edx, CONTROL_REGION_START + (0 * CONTROL_REGION_BYTES_PER_TIER)
+    mov edx, SLAB_BASE + CONTROL_REGION_START + (0 * CONTROL_REGION_BYTES_PER_TIER)
+
+    ; EDX = address of the dword we're going to
+    ; modify
     mov ecx, eax
     shr ecx, 5 ; 32 bits per dword
-.find_bitmask_dword_loop:
-    cmp ecx, 0
-    je .find_bitmask_dword_done
-    add edx, 4
-    dec ecx
-    jmp .find_bitmask_dword_loop
-.find_bitmask_dword_done:
+    shl ecx, 2 ; 4 bytes per dword
+    add edx, ecx
+
+    ; EBX = bitmask such that this bit will be
+    ; turned off
+    mov ecx, eax
+    and ecx, 0x0000001f ; only the low 5 bits matter now
+    xor ebx, ebx
+    bts ebx, ecx
+    not ebx
+
+    ; Flip the bit!
+    and [edx], ebx
 
 .not_implemented_free: ; <-- TODO: implement
+    pop ebx
     leave
     ret
 
