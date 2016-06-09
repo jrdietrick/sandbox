@@ -100,22 +100,6 @@ align 16, db 0
 %define ALLOCATOR_FLAGS_LOCATION 0x003c8000
 %define ALLOCATOR_INITIALIZED FLAG(0)
 
-%macro check_size_against_tier 1
-    mov dword [esp + 0x08], TIER_%1_ALLOCATION_COUNT
-    mov dword [esp + 0x04], TIER_%1_ALLOCATION_POWER
-    mov dword [esp + 0x00], %1
-    cmp ecx, (1 << TIER_%1_ALLOCATION_POWER)
-    jle .tier_located
-%endmacro
-
-%macro check_tier_for_leaks 1
-    mov dword [esp + 0x04], TIER_%1_ALLOCATION_COUNT
-    mov dword [esp + 0x00], %1
-    call leak_check_tier
-    test eax, eax
-    jnz .leak_found
-%endmacro
-
 initialize:
     ; Zero out all the control areas
     mov edx, SLAB_BASE + CONTROL_REGION_START
@@ -233,6 +217,14 @@ allocate_memory:
     leave
     ret
 
+%macro check_size_against_tier 1
+    mov dword [esp + 0x08], TIER_%1_ALLOCATION_COUNT
+    mov dword [esp + 0x04], TIER_%1_ALLOCATION_POWER
+    mov dword [esp + 0x00], %1
+    cmp ecx, (1 << TIER_%1_ALLOCATION_POWER)
+    jle .tier_located
+%endmacro
+
 malloc:
     push ebp
     mov ebp, esp
@@ -270,6 +262,15 @@ malloc:
 
     leave
     ret
+
+%macro check_pointer_against_tier 2
+    cmp ebx, SLAB_BASE + ((%1 + 1) * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
+    jge %2
+    mov dword [esp + 0x04], TIER_%1_ALLOCATION_POWER
+    mov dword [esp], %1
+    call free_memory
+    jmp .done
+%endmacro
 
 free_memory:
     push ebp
@@ -334,59 +335,33 @@ free:
     cmp ebx, SLAB_BASE + CONTROL_REGION_START
     jge .invalid_free
 
+    ; The below will decide which tier the returned
+    ; pointer belongs to, and call free_memory
+    ;
+    ; free_memory (
+    ;     int tier,
+    ;     int tier_allocation_power,
+    ;     void* ptr
+    ;     );
     push ebx
-    cmp ebx, SLAB_BASE + (1 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
-    jge .not_tier_0
-    push dword TIER_0_ALLOCATION_POWER
-    push dword 0
-    call free_memory
-    jmp .done
+    sub esp, 8
+
+    check_pointer_against_tier 0, .not_tier_0
 .not_tier_0:
-    cmp ebx, SLAB_BASE + (2 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
-    jge .not_tier_1
-    push dword TIER_1_ALLOCATION_POWER
-    push dword 1
-    call free_memory
-    jmp .done
+    check_pointer_against_tier 1, .not_tier_1
 .not_tier_1:
-    cmp ebx, SLAB_BASE + (3 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
-    jge .not_tier_2
-    push dword TIER_2_ALLOCATION_POWER
-    push dword 2
-    call free_memory
-    jmp .done
+    check_pointer_against_tier 2, .not_tier_2
 .not_tier_2:
-    cmp ebx, SLAB_BASE + (4 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
-    jge .not_tier_3
-    push dword TIER_3_ALLOCATION_POWER
-    push dword 3
-    call free_memory
-    jmp .done
+    check_pointer_against_tier 3, .not_tier_3
 .not_tier_3:
-    cmp ebx, SLAB_BASE + (5 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
-    jge .not_tier_4
-    push dword TIER_4_ALLOCATION_POWER
-    push dword 4
-    call free_memory
-    jmp .done
+    check_pointer_against_tier 4, .not_tier_4
 .not_tier_4:
-    cmp ebx, SLAB_BASE + (6 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
-    jge .not_tier_5
-    push dword TIER_5_ALLOCATION_POWER
-    push dword 5
-    call free_memory
-    jmp .done
+    check_pointer_against_tier 5, .not_tier_5
 .not_tier_5:
-    cmp ebx, SLAB_BASE + (7 * (1 << TIER_ALLOCATION_START_OFFSET_POWER_2))
-    jge .not_tier_6
-    push dword TIER_6_ALLOCATION_POWER
-    push dword 6
-    call free_memory
-    jmp .done
+    check_pointer_against_tier 6, .not_tier_6
 .not_tier_6:
-    push dword TIER_7_ALLOCATION_POWER
-    push dword 7
-    call free_memory
+    check_pointer_against_tier 7, .invalid_free
+
 .done:
     add esp, 12
 
@@ -427,6 +402,14 @@ leak_check_tier:
     pop ebx
     leave
     ret
+
+%macro check_tier_for_leaks 1
+    mov dword [esp + 0x04], TIER_%1_ALLOCATION_COUNT
+    mov dword [esp + 0x00], %1
+    call leak_check_tier
+    test eax, eax
+    jnz .leak_found
+%endmacro
 
 leak_check:
     push ebp
