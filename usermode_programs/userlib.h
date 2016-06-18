@@ -41,6 +41,11 @@ char* itoa (
     int base
     );
 
+void printf (
+    char* format_string,
+    int test_integer
+    );
+
 void* malloc (
     unsigned int size
     );

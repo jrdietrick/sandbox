@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, assert, check_sort, free, itoa, malloc, puts, strcmp, strlen, strcpy
+global _exit, assert, check_sort, free, itoa, malloc, printf, puts, strcmp, strlen, strcpy
 
 %define FLAG(x) (1 << x)
 %define DISABLE_FLAG(x) (~x)
@@ -199,6 +199,75 @@ itoa:
 
     pop ebx
     pop edi
+    leave
+    ret
+
+printf:
+    push ebp
+    mov ebp, esp
+
+    push esi
+    push edi
+    push ebx
+
+    ; Set aside a buffer for itoa operations
+    ; [ebp - 0x30]
+    times 9 push dword 0x00000000
+
+    ; Set aside a buffer for partial strings
+    ; [ebp - 0x70]
+    times 16 push dword 0x0000000
+
+    ; EBX = pointer to format string
+    mov esi, [ebp + 0x08]
+    lea edi, [ebp - 0x70]
+    xor ecx, ecx
+
+    mov al, [esi]
+.loop:
+    cmp al, 0x00
+    je .dump_partial_string
+    cmp al, '%'
+    jne .continue
+    ; See if it's '%%'
+    inc esi
+    mov al, [esi]
+    cmp al, '%'
+    je .continue
+    cmp al, 'd'
+    jne assert_false
+    ; Print an integer
+    jmp assert_false
+.continue:
+    mov [edi], al
+    inc esi
+    inc edi
+    inc ecx
+    cmp ecx, 63
+    je .dump_partial_string
+    mov al, [esi]
+    jmp .loop
+.dump_partial_string:
+    ; Null terminate the partial string
+    mov byte [edi], 0x00
+    lea edi, [ebp - 0x70]
+    push edi
+    call puts
+    add esp, 4
+    xor ecx, ecx
+    mov al, [esi]
+    cmp al, 0x00
+    je .done
+    jmp .loop
+
+.done:
+    ; Kill the string and itoa buffers
+    add esp, 0x24 + 0x40
+
+    pop ebx
+    pop edi
+    pop esi
+
     leave
     ret
 
