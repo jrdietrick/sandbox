@@ -210,6 +210,11 @@ printf:
     push edi
     push ebx
 
+    ; EBX = running index of variable arg number
+    ; (0 is the first argument after the format
+    ; string)
+    xor ebx, ebx
+
     ; Set aside a buffer for itoa operations
     ; [ebp - 0x30]
     times 9 push dword 0x00000000
@@ -218,7 +223,6 @@ printf:
     ; [ebp - 0x70]
     times 16 push dword 0x0000000
 
-    ; EBX = pointer to format string
     mov esi, [ebp + 0x08]
     lea edi, [ebp - 0x70]
 
@@ -235,25 +239,58 @@ printf:
     mov al, [esi]
     cmp al, '%'
     je .continue
-    cmp al, 'd'
-    jne assert_false
+
     ; First dump any buffer we have
+    push eax
     mov byte [edi], 0x00
     lea edi, [ebp - 0x70]
     push edi
     call puts
     add esp, 4
+    pop eax
+
+    inc esi
+
+.check_format_string
+    cmp al, 's'
+    jne .check_format_integer
+.format_string:
+    ; It's %s, print a string
+    mov eax, ebx
+    inc ebx
+    shl eax, 2
+    lea eax, [eax + ebp + 0x0c]
+    push dword [eax]
+    call puts
+    add esp, 4
+    jmp .restart_loop
+
+.check_format_integer:
+    cmp al, 'd'
+    jne assert_false
+.format_integer:
     ; It's %d, print an integer
+
+    ; Base 10
     push dword 10
+
+    ; Buffer location
     lea eax, [ebp - 0x30]
     push eax
-    push dword [ebp + 0x0c]
+
+    ; Compute address of the argument
+    mov eax, ebx
+    inc ebx
+    shl eax, 2
+    lea eax, [eax + ebp + 0x0c]
+    push dword [eax]
+
     call itoa
     add esp, 4
     call puts
     add esp, 8
-    inc esi
     jmp .restart_loop
+
 .continue:
     mov [edi], al
     inc esi

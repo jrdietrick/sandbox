@@ -57,19 +57,11 @@ int move (
 {
     Disk* disk_in_hand;
     int moves = 0;
-    char itoa_buffer[33];
 
     if (disk_count == 1) {
         disk_in_hand = from->pop();
         to->push(disk_in_hand);
-        puts("Disk of radius ");
-        itoa(disk_in_hand->radius_, itoa_buffer, 10);
-        puts(itoa_buffer);
-        puts(" from ");
-        puts(from->getName());
-        puts(" -> ");
-        puts(to->getName());
-        puts("\n");
+        printf("Disk of radius %d from %s -> %s\n", disk_in_hand->radius_, from->getName(), to->getName());
         return 1;
     }
 
@@ -116,11 +108,7 @@ int main (
     spin0->push(disk1);
 
     moves = move(spin0, spin1, 3, spin2);
-    puts("\n");
-    puts("Total moves: ");
-    itoa(moves, itoa_buffer, 10);
-    puts(itoa_buffer);
-    puts("\n\n");
+    printf("\nTotal moves: %d\n\n", moves);
 
     delete spin2;
     delete spin1;

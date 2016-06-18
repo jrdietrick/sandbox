@@ -43,7 +43,7 @@ char* itoa (
 
 void printf (
     char* format_string,
-    int test_integer
+    ...
     );
 
 void* malloc (
