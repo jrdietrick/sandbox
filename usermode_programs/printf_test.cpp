@@ -4,7 +4,12 @@
 int main (
     )
 {
-    printf("test\n", 9);
+    printf("test                                                     test\n", 9);
+    printf("test                                                      test\n", 9);
+    printf("test                                                       test\n", 9);
+    printf("test                                                        test\n", 9);
+    printf("test                                                         test\n", 9);
+    //printf("test %d test\n", 9);
     return 0;
 }
 
