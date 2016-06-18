@@ -95,6 +95,7 @@ puts:
 fputs:
     push ebp
     mov ebp, esp
+    push ebx
 
     mov ecx, [ebp + 0x08]
     push ecx
@@ -107,6 +108,7 @@ fputs:
 
     int 0x80
 
+    pop ebx
     pop ebp
     ret
 
