@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, assert, check_sort, free, itoa, malloc, puts, strcmp, strlen, strcpy
+global _exit, assert, check_sort, free, itoa, malloc, printf, puts, strcmp, strlen, strcpy
 
 %define FLAG(x) (1 << x)
 %define DISABLE_FLAG(x) (~x)
@@ -199,6 +199,126 @@ itoa:
 
     pop ebx
     pop edi
+    leave
+    ret
+
+printf:
+    push ebp
+    mov ebp, esp
+
+    push esi
+    push edi
+    push ebx
+
+    ; EBX = running index of variable arg number
+    ; (0 is the first argument after the format
+    ; string)
+    xor ebx, ebx
+
+    ; Set aside a buffer for itoa operations
+    ; [ebp - 0x30]
+    times 9 push dword 0x00000000
+
+    ; Set aside a buffer for partial strings
+    ; [ebp - 0x70]
+    times 16 push dword 0x0000000
+
+    mov esi, [ebp + 0x08]
+    lea edi, [ebp - 0x70]
+
+.restart_loop:
+    xor ecx, ecx
+.loop:
+    mov al, [esi]
+    cmp al, 0x00
+    je .dump_partial_string
+    cmp al, '%'
+    jne .continue
+    ; See if it's '%%'
+    inc esi
+    mov al, [esi]
+    cmp al, '%'
+    je .continue
+
+    ; First dump any buffer we have
+    push eax
+    mov byte [edi], 0x00
+    lea edi, [ebp - 0x70]
+    push edi
+    call puts
+    add esp, 4
+    pop eax
+
+    inc esi
+
+.check_format_string
+    cmp al, 's'
+    jne .check_format_integer
+.format_string:
+    ; It's %s, print a string
+    mov eax, ebx
+    inc ebx
+    shl eax, 2
+    lea eax, [eax + ebp + 0x0c]
+    push dword [eax]
+    call puts
+    add esp, 4
+    jmp .restart_loop
+
+.check_format_integer:
+    cmp al, 'd'
+    jne assert_false
+.format_integer:
+    ; It's %d, print an integer
+
+    ; Base 10
+    push dword 10
+
+    ; Buffer location
+    lea eax, [ebp - 0x30]
+    push eax
+
+    ; Compute address of the argument
+    mov eax, ebx
+    inc ebx
+    shl eax, 2
+    lea eax, [eax + ebp + 0x0c]
+    push dword [eax]
+
+    call itoa
+    add esp, 4
+    call puts
+    add esp, 8
+    jmp .restart_loop
+
+.continue:
+    mov [edi], al
+    inc esi
+    inc edi
+    inc ecx
+    cmp ecx, 63
+    je .dump_partial_string
+    jmp .loop
+.dump_partial_string:
+    ; Null terminate the partial string
+    mov byte [edi], 0x00
+    lea edi, [ebp - 0x70]
+    push edi
+    call puts
+    add esp, 4
+    mov al, [esi]
+    cmp al, 0x00
+    je .done
+    jmp .restart_loop
+
+.done:
+    ; Kill the string and itoa buffers
+    add esp, 0x24 + 0x40
+
+    pop ebx
+    pop edi
+    pop esi
+
     leave
     ret
 
