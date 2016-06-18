@@ -221,10 +221,11 @@ printf:
     ; EBX = pointer to format string
     mov esi, [ebp + 0x08]
     lea edi, [ebp - 0x70]
-    xor ecx, ecx
 
-    mov al, [esi]
+.restart_loop:
+    xor ecx, ecx
 .loop:
+    mov al, [esi]
     cmp al, 0x00
     je .dump_partial_string
     cmp al, '%'
@@ -236,8 +237,23 @@ printf:
     je .continue
     cmp al, 'd'
     jne assert_false
-    ; Print an integer
-    jmp assert_false
+    ; First dump any buffer we have
+    mov byte [edi], 0x00
+    lea edi, [ebp - 0x70]
+    push edi
+    call puts
+    add esp, 4
+    ; It's %d, print an integer
+    push dword 10
+    lea eax, [ebp - 0x30]
+    push eax
+    push dword [ebp + 0x0c]
+    call itoa
+    add esp, 4
+    call puts
+    add esp, 8
+    inc esi
+    jmp .restart_loop
 .continue:
     mov [edi], al
     inc esi
@@ -245,7 +261,6 @@ printf:
     inc ecx
     cmp ecx, 63
     je .dump_partial_string
-    mov al, [esi]
     jmp .loop
 .dump_partial_string:
     ; Null terminate the partial string
@@ -254,11 +269,10 @@ printf:
     push edi
     call puts
     add esp, 4
-    xor ecx, ecx
     mov al, [esi]
     cmp al, 0x00
     je .done
-    jmp .loop
+    jmp .restart_loop
 
 .done:
     ; Kill the string and itoa buffers
