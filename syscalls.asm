@@ -5,7 +5,7 @@ db 'syscalls.asm', 0
 align 16, db 0
 
 system_call_handler:
-    push ebp
+    pushad
     mov ebp, esp
     push edx
     push ecx
@@ -52,7 +52,7 @@ do_the_putc:
     call puts
 done:
     mov esp, ebp
-    pop ebp
+    popad
     iret
 
 system_call_exit:
