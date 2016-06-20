@@ -41,7 +41,7 @@ char* itoa (
     int base
     );
 
-void printf (
+int printf (
     char* format_string,
     ...
     );

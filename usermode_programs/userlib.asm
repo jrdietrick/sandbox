@@ -102,11 +102,15 @@ fputs:
     call strlen
     add esp, 4
 
+    push eax
+
     mov edx, eax
     mov ebx, [ebp + 0x0c]
     mov eax, 4 ; write
 
     int 0x80
+
+    pop eax
 
     pop ebx
     pop ebp
@@ -223,6 +227,10 @@ printf:
     ; [ebp - 0x70]
     times 16 push dword 0x0000000
 
+    ; Set aside a counter for characters written;
+    ; this will be our return value
+    push dword 0x00000000
+
     mov esi, [ebp + 0x08]
     lea edi, [ebp - 0x70]
 
@@ -254,9 +262,11 @@ printf:
     push eax
     mov byte [edi], 0x00
     lea edi, [ebp - 0x70]
+    push dword 1
     push edi
-    call puts
-    add esp, 4
+    call fputs
+    add esp, 8
+    add [ebp - 0x74], eax
     pop eax
 
     ; Figure out which format specifier it is
@@ -271,9 +281,11 @@ printf:
     inc ebx
     shl eax, 2
     lea eax, [eax + ebp + 0x0c]
+    push dword 1
     push dword [eax]
-    call puts
-    add esp, 4
+    call fputs
+    add esp, 8
+    add [ebp - 0x74], eax
     jmp .restart_loop
 
     ; Check for %d
@@ -299,23 +311,30 @@ printf:
 
     call itoa
     add esp, 4
-    call puts
+    mov dword [esp + 0x04], 1
+    call fputs
     add esp, 8
+    add [ebp - 0x74], eax
     jmp .restart_loop
 
 .flush_buffer:
     ; Null terminate the partial string
     mov byte [edi], 0x00
     lea edi, [ebp - 0x70]
+    push dword 1
     push edi
-    call puts
-    add esp, 4
+    call fputs
+    add esp, 8
+    add [ebp - 0x74], eax
     mov al, [esi]
     cmp al, 0x00
     je .done
     jmp .restart_loop
 
 .done:
+    ; Pop return value
+    pop eax
+
     ; Kill the string and itoa buffers
     add esp, 0x24 + 0x40
 
