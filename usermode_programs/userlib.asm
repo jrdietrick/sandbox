@@ -231,15 +231,25 @@ printf:
 .loop:
     mov al, [esi]
     cmp al, 0x00
-    je .dump_partial_string
+    je .flush_buffer
     cmp al, '%'
-    jne .continue
+    je .maybe_format_specifier
+.regular_character:
+    mov [edi], al
+    inc esi
+    inc edi
+    inc ecx
+    cmp ecx, 63
+    je .flush_buffer
+    jmp .loop
+
+.maybe_format_specifier:
     ; See if it's '%%'
     inc esi
     mov al, [esi]
     cmp al, '%'
-    je .continue
-
+    je .regular_character
+.is_format_specifier:
     ; First dump any buffer we have
     push eax
     mov byte [edi], 0x00
@@ -249,8 +259,9 @@ printf:
     add esp, 4
     pop eax
 
+    ; Figure out which format specifier it is
     inc esi
-
+    ; Check for %s
 .check_format_string
     cmp al, 's'
     jne .check_format_integer
@@ -265,6 +276,7 @@ printf:
     add esp, 4
     jmp .restart_loop
 
+    ; Check for %d
 .check_format_integer:
     cmp al, 'd'
     jne assert_false
@@ -291,15 +303,7 @@ printf:
     add esp, 8
     jmp .restart_loop
 
-.continue:
-    mov [edi], al
-    inc esi
-    inc edi
-    inc ecx
-    cmp ecx, 63
-    je .dump_partial_string
-    jmp .loop
-.dump_partial_string:
+.flush_buffer:
     ; Null terminate the partial string
     mov byte [edi], 0x00
     lea edi, [ebp - 0x70]
