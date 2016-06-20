@@ -13,15 +13,10 @@ void _start (
     if (strcmp(number_as_string, expected_result)) {
         assert(false);
     } else {
-        puts("ASSERT OK\n");
+        puts("ASSERT OK");
     }
 
-    length = strlen(number_as_string);
-
-    number_as_string[length] = '\n';
-    number_as_string[length + 1] = '\n';
-    number_as_string[length + 2] = 0;
-
     puts(number_as_string);
+    puts("");
     _exit(0);
 }

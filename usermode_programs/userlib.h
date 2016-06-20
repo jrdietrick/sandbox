@@ -31,7 +31,7 @@ void strcpy (
     char* b
     );
 
-void puts (
+int puts (
     char* str
     );
 

@@ -18,6 +18,6 @@ _start:
     push dword 42
     call _exit
 
-string_to_print: db 'this is a string from userspace!', 0x0a, 0x0a, 0
+string_to_print: db 'this is a string from userspace!', 0
 
 %include "userlib.asm"

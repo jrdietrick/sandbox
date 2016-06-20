@@ -85,11 +85,30 @@ strcmp:
     ret
 
 puts:
-    mov ecx, [esp + 0x04]
+    push ebp
+    mov ebp, esp
+
+    ; Number of characters written (return value)
+    push dword 0
+    ; Newline and null terminator
+    push dword 0x0000000a
+
+    mov ecx, [ebp + 0x08]
     push dword 1 ; stdout
     push ecx
     call fputs
+    add [ebp - 0x04], eax
+    add esp, 4
+    lea eax, [ebp - 0x08]
+    push eax
+    call fputs
+    add [ebp - 0x04], eax
     add esp, 8
+
+    add esp, 4
+    pop eax
+
+    leave
     ret
 
 fputs:
@@ -347,7 +366,7 @@ printf:
 
 %include "allocator.asm"
 
-memory_leak_detected: db 'MEMORY LEAK DETECTED', 0x0a, 0
+memory_leak_detected: db 'MEMORY LEAK DETECTED', 0
 
 align 16, db 0
 
