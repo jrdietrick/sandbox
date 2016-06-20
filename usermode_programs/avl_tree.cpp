@@ -220,11 +220,7 @@ void printNodeShortcut (
     Node* node
     )
 {
-    char itoa_buffer[33];
-    itoa(node->getValue(), itoa_buffer, 10);
-    puts("visited ");
-    puts(itoa_buffer);
-    puts("\n");
+    printf("visited %d\n", node->getValue());
 }
 
 void Node::inOrderTraversal (
@@ -266,8 +262,6 @@ void Node::postOrderTraversal (
 int main (
     )
 {
-    char itoa_buffer[33];
-
     Node* root = new Node(0);
     for (int i = 1; i < 10; i++) {
         root = root->insert(new Node(i));
@@ -289,10 +283,6 @@ int main (
     for (int i = 0; i < 5; i++) {
         Node* extracted;
         root = root->extract(i, &extracted);
-        //itoa(extracted->getValue(), itoa_buffer, 10);
-        //puts("extracted ");
-        //puts(itoa_buffer);
-        //puts("\n");
         delete extracted;
     }
 

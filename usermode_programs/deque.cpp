@@ -261,7 +261,6 @@ int main (
     )
 {
     Deque myDeque;
-    char itoa_buffer[33];
 
     for (int i = 0; i < 128; i++) {
         myDeque.pushRight(new int[1]{i});
@@ -269,12 +268,10 @@ int main (
 
     while (!myDeque.empty()) {
         int* thing = static_cast<int*>(myDeque.popLeft());
-        itoa(*thing, itoa_buffer, 10);
-        puts(itoa_buffer);
-        puts("\n");
+        printf("%d\n", *thing);
         delete thing;
     }
-    puts("\n\n");
+    printf("\n\n");
     return 0;
 }
 

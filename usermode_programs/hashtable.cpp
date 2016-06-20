@@ -199,12 +199,8 @@ void extract_print_discard (
     char* key
     )
 {
-    char itoa_buffer[33];
-    int* value;
-    value = static_cast<int*>(hashtable.remove(key));
-    itoa(*value, itoa_buffer, 10);
-    puts(itoa_buffer);
-    puts("\n");
+    int* value = static_cast<int*>(hashtable.remove(key));
+    printf("%d\n", *value);
     delete[] value;
 }
 

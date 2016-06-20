@@ -83,7 +83,6 @@ int main (
     )
 {
     int moves;
-    char itoa_buffer[33];
 
     Disk* disk8 = new Disk(8);
     Disk* disk7 = new Disk(7);
