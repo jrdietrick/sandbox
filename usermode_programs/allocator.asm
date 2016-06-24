@@ -424,7 +424,7 @@ leak_check:
     check_tier_for_leaks 5
     check_tier_for_leaks 6
     check_tier_for_leaks 7
-.leak_found
+.leak_found:
     add esp, 8
 
     leave

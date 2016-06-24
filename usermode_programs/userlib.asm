@@ -291,7 +291,7 @@ printf:
     ; Figure out which format specifier it is
     inc esi
     ; Check for %s
-.check_format_string
+.check_format_string:
     cmp al, 's'
     jne .check_format_integer
 .format_string:
