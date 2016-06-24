@@ -15,6 +15,10 @@ align 16, db 0
 %define SCANCODE_EXTENDED_SET 0xe0
 %define SCANCODE_BREAK FLAG(7)
 
+%define KEYBOARD_BUFFER_BYTES_POWER_2 9
+%define KEYBOARD_BUFFER_BYTES (1 << KEYBOARD_BUFFER_BYTES_POWER_2)
+%define KEYBOARD_BUFFER_BYTES_MODULO_MASK (0xffffffff >> (32 - KEYBOARD_BUFFER_BYTES_POWER_2))
+
 keyboard_interrupt_handler:
     pushad
 
@@ -32,6 +36,9 @@ keyboard_interrupt_handler:
     mov al, [ecx]
     cmp al, NPC
     je .read
+    push eax
+    call keyboard_buffer_append
+    pop eax
     call putc
     jmp .read
 .done:
@@ -40,6 +47,55 @@ keyboard_interrupt_handler:
     add esp, 4
     popad
     iret
+
+keyboard_bytes_ready:
+    mov eax, [keyboard_buffer_end_cursor]
+    add eax, KEYBOARD_BUFFER_BYTES
+    sub eax, [keyboard_buffer_start_cursor]
+    and eax, KEYBOARD_BUFFER_BYTES_MODULO_MASK
+    ret
+
+keyboard_buffer_append:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    ; ECX = start cursor
+    ; EDX = end cursor
+    mov ecx, [keyboard_buffer_start_cursor]
+    mov edx, [keyboard_buffer_end_cursor]
+
+    ; Write in the character
+    lea ebx, [keyboard_buffer + edx]
+    mov eax, [ebp + 0x08]
+    mov [ebx], al
+
+    ; Move EDX to the next spot, wrapping if needed
+    inc edx
+    and edx, KEYBOARD_BUFFER_BYTES_MODULO_MASK
+
+    ; If they are now equal, start trimming stuff
+    ; from the front of the buffer (sorry!)
+    cmp edx, ecx
+    jne .no_trim
+    inc ecx
+    and ecx, KEYBOARD_BUFFER_BYTES_MODULO_MASK
+.no_trim:
+
+    mov [keyboard_buffer_start_cursor], ecx
+    mov [keyboard_buffer_end_cursor], edx
+
+    pop ebx
+    leave
+    ret
+
+align 16, db 0
+
+keyboard_buffer: times KEYBOARD_BUFFER_BYTES db 0
+keyboard_buffer_end:
+
+keyboard_buffer_start_cursor: dd 0
+keyboard_buffer_end_cursor: dd 0
 
 align 16, db 0
 
