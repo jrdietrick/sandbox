@@ -71,17 +71,6 @@ exception_handler_common:
     call exception_print_registers
     jmp exception_spin
 
-rtc_tick:
-    pushad
-    ; Acknowledge the RTC tick
-    call rtc_clear
-    ; Send the EOI to the PIC
-    push dword 8
-    call send_eoi
-    add esp, 4
-    popad
-    iret
-
 exception_spin:
     cli
     hlt

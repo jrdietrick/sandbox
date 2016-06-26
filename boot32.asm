@@ -229,6 +229,7 @@ idt:
 %include "loader.asm"
 %include "pic.asm"
 %include "keyboard.asm"
+%include "rtc.asm"
 
 align 16, db 0
 

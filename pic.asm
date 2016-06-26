@@ -11,9 +11,6 @@ align 16, db 0
 
 %define COMMAND_EOI 0x20
 
-%define RTC_COMMAND_PORT 0x70
-%define RTC_DATA_PORT (RTC_COMMAND_PORT + 1)
-
 irq_bitmask:
     mov ecx, 1
 .shift:
@@ -121,25 +118,4 @@ send_eoi:
     out SLAVE_PIC_COMMAND, al
 .master_only:
     out MASTER_PIC_COMMAND, al
-    ret
-
-rtc_init:
-    ; Set up the real-time clock (IRQ 8)
-    mov al, 0x0a
-    out RTC_COMMAND_PORT, al
-    mov al, 0x2f
-    out RTC_DATA_PORT, al
-    mov al, 0x0b
-    out RTC_COMMAND_PORT, al
-    mov al, 0x40
-    out RTC_DATA_PORT, al
-
-    push 8
-    call enable_irq
-    add esp, 4
-
-rtc_clear:
-    mov al, 0x0c
-    out RTC_COMMAND_PORT, al
-    in al, RTC_DATA_PORT
     ret
