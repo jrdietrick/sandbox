@@ -7,6 +7,8 @@ align 16, db 0
 %define RTC_COMMAND_PORT 0x70
 %define RTC_DATA_PORT (RTC_COMMAND_PORT + 1)
 
+rtc_ticks: dd 0
+
 rtc_init:
     ; Set up the real-time clock (IRQ 8)
     mov al, 0x0a
@@ -28,11 +30,25 @@ rtc_clear:
     in al, RTC_DATA_PORT
     ret
 
+rtc_sleep:
+    ; EAX = number of ticks to wait
+    mov eax, [esp + 0x04]
+    ; ECX = starting tick count
+    mov ecx, [rtc_ticks]
+
+.spin:
+    mov edx, [rtc_ticks]
+    sub edx, ecx
+    cmp edx, eax
+    jge .break
+    hlt
+    jmp .spin
+
+.break:
+    ret
+
 rtc_tick:
     pushad
-    mov esi, [keyboard_buffer_start_cursor]
-    add esi, keyboard_buffer
-    call println
     ; Acknowledge the RTC tick
     call rtc_clear
     ; Send the EOI to the PIC

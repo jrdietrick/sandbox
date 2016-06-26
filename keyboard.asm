@@ -42,6 +42,7 @@ keyboard_interrupt_handler:
     call putc
     jmp .read
 .done:
+    lock add dword [rtc_ticks], 1
     push dword 1
     call send_eoi
     add esp, 4

@@ -6,7 +6,8 @@ CC = gcc
 CXX = g++ -std=c++11
 AS = nasm
 
-SRCS = avl_tree.cpp \
+SRCS = echo.cpp \
+	   avl_tree.cpp \
 	   hashtable.cpp \
 	   deque.cpp \
 	   towers_of_hanoi.cpp \

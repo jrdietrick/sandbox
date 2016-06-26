@@ -54,6 +54,10 @@ void free (
     void* freed_region
     );
 
+void sleep (
+    int ticks
+    );
+
 int check_sort (
     int* array,
     int length

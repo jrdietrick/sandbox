@@ -125,15 +125,9 @@ setup_idt:
     mov al, 0x0a ; '\n'
     call putc
 
+    call initialize_8259
+
     call load_program
-
-    ; call initialize_8259
-
-    ; ; Print an empty line
-    ; push dword 0
-    ; mov esi, esp
-    ; call println
-    ; add esp, 4
 
 halt:
     hlt

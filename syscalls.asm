@@ -73,4 +73,9 @@ system_call_write:
     iret
 
 system_call_sleep:
+    push ebx
+    call rtc_sleep
+    add esp, 4
+
+    popad
     iret

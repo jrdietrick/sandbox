@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, assert, check_sort, free, itoa, malloc, printf, puts, strcmp, strlen, strcpy
+global _exit, assert, check_sort, free, itoa, malloc, printf, puts, sleep, strcmp, strlen, strcpy
 
 %define FLAG(x) (1 << x)
 %define DISABLE_FLAG(x) (~x)
@@ -133,6 +133,20 @@ fputs:
 
     pop ebx
     pop ebp
+    ret
+
+sleep:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    mov eax, 0xa2
+    mov ebx, [ebp + 0x08]
+
+    int 0x80
+
+    pop ebx
+    leave
     ret
 
 check_sort:
