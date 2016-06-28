@@ -77,5 +77,6 @@ system_call_sleep:
     call rtc_sleep
     add esp, 4
 
+    mov esp, ebp
     popad
     iret
