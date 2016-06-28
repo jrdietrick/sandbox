@@ -13,6 +13,7 @@ rtc_init:
     ; Set up the real-time clock (IRQ 8)
     mov al, 0x0a
     out RTC_COMMAND_PORT, al
+    ; Initialize to a frequency of 2Hz (500ms/tick)
     mov al, 0x2f
     out RTC_DATA_PORT, al
     mov al, 0x0b
@@ -49,6 +50,8 @@ rtc_sleep:
 
 rtc_tick:
     pushad
+    ; Increment tick counter
+    lock add dword [rtc_ticks], 1
     ; Acknowledge the RTC tick
     call rtc_clear
     ; Send the EOI to the PIC

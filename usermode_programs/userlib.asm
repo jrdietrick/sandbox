@@ -141,7 +141,12 @@ sleep:
     push ebx
 
     mov eax, 0xa2
+
+    ; The RTC fires at 2 ticks per second, so
+    ; multiply the requested number of seconds
+    ; by two to get ticks
     mov ebx, [ebp + 0x08]
+    shl ebx, 1
 
     int 0x80
 

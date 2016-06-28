@@ -55,7 +55,7 @@ void free (
     );
 
 void sleep (
-    int ticks
+    int seconds
     );
 
 int check_sort (

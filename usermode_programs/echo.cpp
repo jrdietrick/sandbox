@@ -4,7 +4,8 @@
 int main (
     )
 {
-    sleep(2);
+    sleep(5);
+    return 0;
 }
 
 extern "C" void _start (

@@ -38,11 +38,9 @@ keyboard_interrupt_handler:
     je .read
     push eax
     call keyboard_buffer_append
-    pop eax
-    call putc
+    add esp, 4
     jmp .read
 .done:
-    lock add dword [rtc_ticks], 1
     push dword 1
     call send_eoi
     add esp, 4
