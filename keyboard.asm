@@ -88,6 +88,36 @@ keyboard_buffer_append:
     leave
     ret
 
+keyboard_buffer_extract:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    ; ECX = start cursor
+    ; EDX = end cursor
+    mov ecx, [keyboard_buffer_start_cursor]
+    mov edx, [keyboard_buffer_end_cursor]
+
+    ; If they are equal, buffer's empty, explode
+    cmp ecx, edx
+    jne .has_bytes
+    call assert_false
+.has_bytes:
+    xor eax, eax
+    lea ebx, [keyboard_buffer + ecx]
+    mov al, [ebx]
+
+    ; Move ECX to the next spot, trimming if needed
+    inc ecx
+    and ecx, KEYBOARD_BUFFER_BYTES_MODULO_MASK
+
+    mov [keyboard_buffer_start_cursor], ecx
+    mov [keyboard_buffer_end_cursor], edx
+
+    pop ebx
+    leave
+    ret
+
 align 16, db 0
 
 keyboard_buffer: times KEYBOARD_BUFFER_BYTES db 0

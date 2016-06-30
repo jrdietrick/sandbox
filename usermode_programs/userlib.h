@@ -35,6 +35,10 @@ int puts (
     char* str
     );
 
+int fgetc (
+    int fd
+    );
+
 char* itoa (
     int value,
     char* str,

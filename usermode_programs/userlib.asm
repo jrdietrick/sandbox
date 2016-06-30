@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, assert, check_sort, free, itoa, malloc, printf, puts, sleep, strcmp, strlen, strcpy
+global _exit, assert, check_sort, fgetc, free, itoa, malloc, printf, puts, sleep, strcmp, strlen, strcpy
 
 %define FLAG(x) (1 << x)
 %define DISABLE_FLAG(x) (~x)
@@ -133,6 +133,32 @@ fputs:
 
     pop ebx
     pop ebp
+    ret
+
+fgetc:
+    push ebp
+    mov ebp, esp
+    push ebx
+
+    ; Read one character
+    mov edx, 1
+
+    ; Allocate space for character
+    push dword 0x00000000
+    mov ecx, esp
+
+    ; File descriptor
+    mov ebx, [ebp + 0x08]
+
+    mov eax, 3 ; read
+
+    int 0x80
+
+    ; Pop result into EAX
+    pop eax
+
+    pop ebx
+    leave
     ret
 
 sleep:

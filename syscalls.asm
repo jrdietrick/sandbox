@@ -15,6 +15,9 @@ system_call_handler:
     cmp eax, 0x01 ; exit
     je system_call_exit
 
+    cmp eax, 0x03 ; read
+    je system_call_read
+
     cmp eax, 0x04 ; write
     je system_call_write
 
@@ -33,6 +36,56 @@ system_call_exit:
 .spin:
     hlt
     jmp .spin
+
+system_call_read:
+    mov ebx, [ebp - 0x0c] ; file handle
+    cmp ebx, 0 ; stdin
+    je .stdin
+    call assert_false
+.stdin:
+.outer_loop:
+    cmp dword [ebp - 0x04], 0 ; compare against remaining bytes count
+    je .done
+.wait_on_stdin:
+    call keyboard_bytes_ready
+    cmp eax, 0
+    jne .stdin_ready
+    hlt
+    jmp .wait_on_stdin
+.stdin_ready:
+    cmp [ebp - 0x04], eax
+    ; If the number of bytes left to read is less
+    ; than the number available, only read the
+    ; remaining count
+    jge .read_from_keyboard_buffer
+    mov eax, [ebp - 0x04]
+.read_from_keyboard_buffer:
+    push eax
+    mov ecx, eax
+    mov edx, [ebp - 0x08]
+.read_from_keyboard_buffer_loop:
+    cmp ecx, 0
+    je .read_from_keyboard_buffer_done
+
+    push ecx
+    push edx
+    call keyboard_buffer_extract
+    pop edx
+    pop ecx
+
+    mov [edx], al
+    inc edx
+    dec ecx
+    jmp .read_from_keyboard_buffer_loop
+.read_from_keyboard_buffer_done:
+    pop eax
+    sub [ebp - 0x04], eax
+    mov [ebp - 0x08], edx
+    jmp .outer_loop
+.done:
+    mov esp, ebp
+    popad
+    iret
 
 system_call_write:
     mov ebx, [ebp - 0x0c] ; file handle

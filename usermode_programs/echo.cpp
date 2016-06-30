@@ -4,7 +4,9 @@
 int main (
     )
 {
-    sleep(5);
+    printf("----\n");
+    printf("%d\n", fgetc(0));
+    printf("----\n");
     return 0;
 }
 
