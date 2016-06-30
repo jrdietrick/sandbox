@@ -132,7 +132,7 @@ fputs:
     pop eax
 
     pop ebx
-    pop ebp
+    leave
     ret
 
 fgetc:

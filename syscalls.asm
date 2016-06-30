@@ -90,7 +90,8 @@ system_call_read:
 system_call_write:
     mov ebx, [ebp - 0x0c] ; file handle
     cmp ebx, 1 ; stdout
-    jne .done
+    je .allocate_kernel_buffer
+    call assert_false
 .allocate_kernel_buffer:
     ; Figure out the buffer length and
     ; allocate space (on the stack for now
