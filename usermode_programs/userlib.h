@@ -39,6 +39,12 @@ int fgetc (
     int fd
     );
 
+char* fgets (
+    char* str,
+    int num,
+    int fd
+    );
+
 char* itoa (
     int value,
     char* str,

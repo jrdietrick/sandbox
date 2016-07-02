@@ -4,9 +4,9 @@
 int main (
     )
 {
-    printf("----\n");
-    printf("%d\n", fgetc(0));
-    printf("----\n");
+    char buffer[64];
+    fgets(buffer, 64, 0);
+    printf("%s\n", buffer);
     return 0;
 }
 

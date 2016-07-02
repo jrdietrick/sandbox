@@ -4,7 +4,7 @@ db 'userlib.asm', 0
 
 align 16, db 0
 
-global _exit, assert, check_sort, fgetc, free, itoa, malloc, printf, puts, sleep, strcmp, strlen, strcpy
+global _exit, assert, check_sort, fgetc, fgets, free, itoa, malloc, printf, puts, sleep, strcmp, strlen, strcpy
 
 %define FLAG(x) (1 << x)
 %define DISABLE_FLAG(x) (~x)
@@ -158,6 +158,50 @@ fgetc:
     pop eax
 
     pop ebx
+    leave
+    ret
+
+fgets:
+    push ebp
+    mov ebp, esp
+
+    ; EDX = buffer
+    ; ECX = characters remaining
+    mov edx, [ebp + 0x08]
+    mov ecx, [ebp + 0x0c]
+
+    xor eax, eax
+
+    cmp ecx, 0
+    je .done
+
+    ; For return value
+    push edx
+.loop:
+    cmp ecx, 1
+    je .append_null
+
+    push ecx
+    push edx
+
+    push dword [ebp + 0x10]
+    call fgetc
+    add esp, 4
+
+    pop edx
+    pop ecx
+
+    cmp al, 0x00
+    je .append_null
+    mov [edx], al
+    inc edx
+    dec ecx
+    cmp al, 0x0a ; '\n'
+    jne .loop
+.append_null:
+    pop eax
+    mov byte [edx], 0x00
+.done:
     leave
     ret
 
